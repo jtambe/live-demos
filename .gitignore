@@ -48,6 +48,11 @@ instance/
 htmlcov/
 .coverage
 
+# Supabase
+.supabase/
+.temp/
+
 # OS
 .DS_Store
 Thumbs.db
+data/claims-anomaly/claims-anomaly-instructions.md
