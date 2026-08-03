@@ -48,6 +48,9 @@ instance/
 htmlcov/
 .coverage
 
+# Vercel
+.vercel/
+
 # Supabase
 .supabase/
 .temp/
