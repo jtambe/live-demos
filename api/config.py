@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env.local"
+        extra = "ignore"
 
     @property
     def is_production(self) -> bool:

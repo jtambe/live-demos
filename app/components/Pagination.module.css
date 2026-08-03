@@ -1,0 +1,152 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.itemsPerPageControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 15px;
+  border-right: 1px solid #d1d5db;
+}
+
+.itemsPerPageControl label {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.itemsSelect {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: white;
+  color: #374151;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.itemsSelect:hover {
+  border-color: #9ca3af;
+}
+
+.itemsSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.navButton {
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.navButton:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.navButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 4px;
+}
+
+.pageButton {
+  padding: 6px 10px;
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 40px;
+  text-align: center;
+}
+
+.pageButton:hover:not(:disabled) {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.pageButton:disabled {
+  cursor: default;
+  color: #6b7280;
+}
+
+.pageButton.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.info {
+  color: #6b7280;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .pagination {
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .itemsPerPageControl {
+    padding: 0;
+    border-right: none;
+    width: 100%;
+    order: -1;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #d1d5db;
+    margin-bottom: 10px;
+  }
+
+  .itemsPerPageControl label {
+    font-size: 0.8rem;
+  }
+
+  .itemsSelect {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+
+  .navButton {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+
+  .pageButton {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    min-width: 32px;
+  }
+
+  .info {
+    font-size: 0.8rem;
+    width: 100%;
+    text-align: center;
+  }
+}

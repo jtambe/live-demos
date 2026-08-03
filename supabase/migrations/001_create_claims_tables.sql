@@ -1,10 +1,10 @@
 -- Migration: Create claims_monthly table
 -- Description: Stores raw claims data from uploaded CSVs
--- Schema: claims-anomaly
+-- Schema: claims_anomaly
 
-CREATE SCHEMA IF NOT EXISTS "claims-anomaly";
+CREATE SCHEMA IF NOT EXISTS claims_anomaly;
 
-CREATE TABLE IF NOT EXISTS "claims-anomaly".claims_monthly (
+CREATE TABLE IF NOT EXISTS claims_anomaly.claims_monthly (
   id BIGSERIAL PRIMARY KEY,
   client_id INT NOT NULL,
   client_name VARCHAR(50) NOT NULL,
@@ -23,5 +23,5 @@ CREATE TABLE IF NOT EXISTS "claims-anomaly".claims_monthly (
   UNIQUE(client_id, service_month)
 );
 
-CREATE INDEX idx_claims_monthly_client_month ON "claims-anomaly".claims_monthly(client_id, service_month);
-CREATE INDEX idx_claims_monthly_service_month ON "claims-anomaly".claims_monthly(service_month);
+CREATE INDEX idx_claims_monthly_client_month ON claims_anomaly.claims_monthly(client_id, service_month);
+CREATE INDEX idx_claims_monthly_service_month ON claims_anomaly.claims_monthly(service_month);
