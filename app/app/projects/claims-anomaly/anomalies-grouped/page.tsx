@@ -127,6 +127,16 @@ export default function AnomaliesGroupedPage() {
     return getPaginatedAnomalies().filter(g => selectedGroups.has(`${g.client_id}-${g.service_month}`))
   }
 
+  const updateReviewStatus = (clientId: number, serviceMonth: string, status: string, feedback: string) => {
+    setAllAnomalies(prev =>
+      prev.map(group =>
+        group.client_id === clientId && group.service_month === serviceMonth
+          ? { ...group, review_status: status, review_feedback: feedback }
+          : group
+      )
+    )
+  }
+
   const getConfidenceColor = (confidence: string) => {
     switch (confidence.toLowerCase()) {
       case 'high':
@@ -235,6 +245,7 @@ export default function AnomaliesGroupedPage() {
                   <th>Month</th>
                   <th>Anomalies Count</th>
                   <th>Confidence Score</th>
+                  <th>Review Status</th>
                   <th>Rules Violated</th>
                   <th>Actions</th>
                 </tr>
@@ -278,6 +289,22 @@ export default function AnomaliesGroupedPage() {
                           </span>
                         ))}
                       </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span
+                        style={{
+                          backgroundColor: group.review_status === 'reviewed' ? '#dcfce7' : '#fee2e2',
+                          color: group.review_status === 'reviewed' ? '#166534' : '#7f1d1d',
+                          padding: '4px 12px',
+                          borderRadius: '4px',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          display: 'inline-block',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {group.review_status === 'reviewed' ? '✓ Reviewed' : '○ Not Reviewed'}
+                      </span>
                     </td>
                     <td style={{ fontSize: '0.85rem', maxWidth: '300px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
@@ -372,6 +399,7 @@ export default function AnomaliesGroupedPage() {
         <AnomalyDetailsModal
           group={selectedGroup}
           onClose={handleCloseModal}
+          onReviewUpdate={updateReviewStatus}
         />
       )}
 
@@ -380,6 +408,7 @@ export default function AnomaliesGroupedPage() {
           selectedCount={selectedGroups.size}
           groups={getSelectedGroupObjects()}
           onClose={handleCloseBulkModal}
+          onReviewUpdate={updateReviewStatus}
         />
       )}
     </main>

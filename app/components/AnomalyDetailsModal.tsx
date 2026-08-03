@@ -28,9 +28,10 @@ interface AnomalyGroup {
 interface Props {
   group: AnomalyGroup
   onClose: () => void
+  onReviewUpdate?: (clientId: number, serviceMonth: string, status: string, feedback: string) => void
 }
 
-export default function AnomalyDetailsModal({ group, onClose }: Props) {
+export default function AnomalyDetailsModal({ group, onClose, onReviewUpdate }: Props) {
   const [reviewStatus, setReviewStatus] = useState<string | null>(null)
   const [feedback, setFeedback] = useState('')
   const [saving, setSaving] = useState(false)
@@ -106,6 +107,9 @@ export default function AnomalyDetailsModal({ group, onClose }: Props) {
 
       if (response.ok) {
         setMessage('✅ Review saved successfully')
+        if (onReviewUpdate) {
+          onReviewUpdate(group.client_id, group.service_month, reviewStatus || '', feedback)
+        }
         setTimeout(() => {
           onClose()
         }, 1000)

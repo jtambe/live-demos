@@ -13,9 +13,10 @@ interface Props {
   selectedCount: number
   groups: AnomalyGroup[]
   onClose: () => void
+  onReviewUpdate: (clientId: number, serviceMonth: string, status: string, feedback: string) => void
 }
 
-export default function BulkReviewModal({ selectedCount, groups, onClose }: Props) {
+export default function BulkReviewModal({ selectedCount, groups, onClose, onReviewUpdate }: Props) {
   const [reviewStatus, setReviewStatus] = useState<string>('reviewed')
   const [feedback, setFeedback] = useState('')
   const [saving, setSaving] = useState(false)
@@ -47,6 +48,9 @@ export default function BulkReviewModal({ selectedCount, groups, onClose }: Prop
 
       if (response.ok) {
         setMessage('✅ Reviews saved successfully')
+        groups.forEach(g => {
+          onReviewUpdate(g.client_id, g.service_month, reviewStatus, feedback)
+        })
         setTimeout(() => {
           onClose()
         }, 1000)
