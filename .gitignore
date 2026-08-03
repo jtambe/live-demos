@@ -55,9 +55,6 @@ htmlcov/
 .supabase/
 .temp/
 
-# Generated output
-anomalies.csv
-
 # OS
 .DS_Store
 Thumbs.db
