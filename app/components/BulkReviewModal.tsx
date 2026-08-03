@@ -30,7 +30,7 @@ export default function BulkReviewModal({ selectedCount, groups, onClose }: Prop
     setSaving(true)
     try {
       const response = await fetch(
-        `${getApiUrl()}/api/claims-anomaly/bulk-client-month-reviews`,
+        `${getApiUrl()}/claims-anomaly/bulk-client-month-reviews`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
