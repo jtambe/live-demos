@@ -1,2 +1,7 @@
+[project]
+name = "live-demos"
+version = "0.1.0"
+description = "Claims anomaly detection with bulk review"
+
 [tool.vercel]
 entrypoint = "api.claims_anomaly:app"
