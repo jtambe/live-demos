@@ -3,14 +3,21 @@ Vercel serverless entry point for Claims Anomaly Detection API
 """
 
 import sys
+import os
 from pathlib import Path
 
 # Add the api directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
+api_dir = str(Path(__file__).parent)
+sys.path.insert(0, api_dir)
+os.chdir(api_dir)
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from routers.claims_anomaly import router as claims_router
+try:
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+    from routers.claims_anomaly import router as claims_router
+except ImportError as e:
+    print(f"Import error: {e}")
+    raise
 
 # Create FastAPI app
 app = FastAPI(title="Claims Anomaly Detection API")
