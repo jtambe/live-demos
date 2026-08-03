@@ -2,7 +2,7 @@ import Link from 'next/link'
 import styles from './ClaimsNavigation.module.css'
 
 interface ClaimsNavigationProps {
-  activePage: 'upload' | 'claims' | 'anomalies'
+  activePage: 'upload' | 'claims' | 'anomalies' | 'rules'
 }
 
 export default function ClaimsNavigation({ activePage }: ClaimsNavigationProps) {
@@ -21,6 +21,11 @@ export default function ClaimsNavigation({ activePage }: ClaimsNavigationProps) 
       <Link href="/projects/claims-anomaly/anomalies">
         <button className={`${styles.navButton} ${activePage === 'anomalies' ? styles.active : ''}`}>
           🔍 View Anomalies
+        </button>
+      </Link>
+      <Link href="/projects/claims-anomaly/rules">
+        <button className={`${styles.navButton} ${activePage === 'rules' ? styles.active : ''}`}>
+          📋 Rules
         </button>
       </Link>
     </nav>

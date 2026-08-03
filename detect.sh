@@ -35,12 +35,12 @@ else
     PYTHON_CMD="python3"
 fi
 
-# Run the Python anomaly detection
+# Run the anomaly export (CSV format)
 if [ -z "$OUTPUT_CSV" ]; then
     # Output to stdout
-    $PYTHON_CMD "$SCRIPT_DIR/api/services/anomaly_rules.py" "$INPUT_CSV"
+    $PYTHON_CMD "$SCRIPT_DIR/api/services/anomaly_export.py" "$INPUT_CSV"
 else
     # Output to file
-    $PYTHON_CMD "$SCRIPT_DIR/api/services/anomaly_rules.py" "$INPUT_CSV" > "$OUTPUT_CSV"
+    $PYTHON_CMD "$SCRIPT_DIR/api/services/anomaly_export.py" "$INPUT_CSV" > "$OUTPUT_CSV"
     echo "Anomalies written to: $OUTPUT_CSV" >&2
 fi
