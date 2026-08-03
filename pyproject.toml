@@ -2,6 +2,16 @@
 name = "live-demos"
 version = "0.1.0"
 description = "Claims anomaly detection with bulk review"
+dependencies = [
+    "fastapi==0.104.1",
+    "uvicorn==0.24.0",
+    "pandas>=2.2.0",
+    "python-multipart==0.0.6",
+    "supabase>=2.3.5",
+    "python-dotenv==1.0.0",
+    "httpx>=0.25.0",
+    "pydantic-settings>=2.0.0",
+]
 
 [tool.vercel]
 entrypoint = "api.claims_anomaly:app"
