@@ -1,12 +1,9 @@
-{
-  "buildCommand": "cd app && npm run build",
-  "outputDirectory": "app/.next",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@next_public_api_url"
-  },
-  "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.11"
-    }
-  }
+{ 
+  "buildCommand": "cd app && npm run build", 
+  "outputDirectory": "app/.next", 
+  "functions": { 
+    "api/**/*.py": { 
+      "runtime": "python3.11" 
+    } 
+  } 
 }
