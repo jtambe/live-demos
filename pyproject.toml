@@ -12,6 +12,3 @@ dependencies = [
     "httpx>=0.25.0",
     "pydantic-settings>=2.0.0",
 ]
-
-[tool.vercel]
-entrypoint = "api.claims_anomaly:app"
