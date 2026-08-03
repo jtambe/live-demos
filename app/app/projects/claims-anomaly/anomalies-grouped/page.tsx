@@ -26,6 +26,8 @@ interface AnomalyGroup {
   }>
   last_seen_at: string
   notes: string
+  review_status: string | null
+  review_feedback: string
 }
 
 export default function AnomaliesGroupedPage() {
