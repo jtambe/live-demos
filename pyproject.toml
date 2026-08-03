@@ -1,0 +1,2 @@
+[tool.vercel]
+entrypoint = "api.claims_anomaly:app"
