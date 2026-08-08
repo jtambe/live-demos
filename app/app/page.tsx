@@ -41,7 +41,7 @@ export default function Home() {
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
         const response = await fetch(`${apiUrl}/health`)
         if (response.ok) {
           setBackendStatus('connected')

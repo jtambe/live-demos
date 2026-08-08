@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import ClaimsNavigation from '@/components/ClaimsNavigation'
+import ClaimsNavigation from '../components/ClaimsNavigation'
 import Pagination from '@/components/Pagination'
 import { usePagination } from '@/hooks/usePagination'
 import { getApiUrl } from '@/utils/api'
 import styles from '../claims-anomaly.module.css'
 import tableRowStyles from '@/components/TableRowNumbers.module.css'
-import AnomalyDetailsModal from '@/components/AnomalyDetailsModal'
-import BulkReviewModal from '@/components/BulkReviewModal'
+import AnomalyDetailsModal from '../components/AnomalyDetailsModal'
+import BulkReviewModal from '../components/BulkReviewModal'
 
 interface AnomalyGroup {
   client_id: number

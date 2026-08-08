@@ -1,8 +1,17 @@
-# Live Demos - Claims Anomaly Detection MVP
+# Live Demos
 
-A full-stack claims anomaly detection system built with Next.js, FastAPI, and PostgreSQL. Detects financial inconsistencies and impossibilities in insurance claims data using 14 detection rules.
+A collection of interactive demos and tools built with modern web technologies.
 
-**Live Demo:** https://live-demos-prod.vercel.app/projects/claims-anomaly/anomalies-grouped
+## Projects
+
+### [Claims Anomaly Detection MVP](projects/claims-anomaly/README.md)
+
+Full-stack application for detecting financial inconsistencies in insurance claims data using 14 detection rules. Built with Next.js, FastAPI, and PostgreSQL.
+
+**Live Demo:** https://live-demos-prod.vercel.app/projects/claims-anomaly/anomalies-grouped  
+**Documentation:** See [projects/claims-anomaly/README.md](projects/claims-anomaly/README.md)
+
+---
 
 ## Tech Stack
 
@@ -10,45 +19,50 @@ A full-stack claims anomaly detection system built with Next.js, FastAPI, and Po
 - **Backend:** FastAPI with background task processing
 - **Database:** PostgreSQL (Supabase)
 - **Hosting:** Vercel (serverless)
+- **CLI:** Bash scripts with Python backends
 
 ## Project Structure
 
 ```
 live-demos/
-├── app/                          # Next.js frontend
-│   ├── app/                      # App Router pages
-│   │   ├── projects/claims-anomaly/
-│   │   │   ├── upload/           # CSV upload page
-│   │   │   ├── claims/           # View claims page
-│   │   │   ├── anomalies/        # View anomalies page
-│   │   │   ├── anomalies-grouped/# Grouped anomalies page
-│   │   │   └── rules/            # Rules reference page
-│   │   └── page.tsx              # Root page
-│   ├── components/               # React components
+├── app/                              # Next.js frontend
+│   ├── app/                          # App Router pages
+│   │   ├── projects/claims-anomaly/  # Claims-anomaly project pages
+│   │   └── page.tsx                  # Root page
+│   ├── components/                   # Shared React components
+│   ├── hooks/                        # Shared React hooks
 │   └── package.json
-├── api/                          # FastAPI backend
-│   ├── main.py                   # FastAPI app entry point
-│   ├── routers/                  # API route handlers
-│   ├── services/                 # Business logic
-│   │   ├── anomaly_rules.py      # 14 detection rules
-│   │   └── anomaly_export.py     # CSV export for detect.sh
-│   ├── utils/                    # Utility functions
-│   ├── requirements.txt          # Python dependencies
-│   └── pyproject.toml            # Python project config
-├── detect.sh                     # CLI tool for batch anomaly detection
-├── vercel.json                   # Vercel services configuration
-└── README.md
+├── api/                              # FastAPI backend
+│   ├── main.py                       # FastAPI entry point
+│   ├── routers/                      # API route handlers
+│   ├── services/                     # Business logic
+│   │   └── claims_anomaly_services/  # Claims-specific services
+│   ├── utils/                        # Shared utilities
+│   ├── requirements.txt              # Python dependencies
+│   └── pyproject.toml                # Python project config
+├── data/                             # Sample data and outputs
+│   └── claims-anomaly/               # Claims-anomaly sample data
+├── projects/                         # Project-specific files
+│   └── claims-anomaly/               # Claims-anomaly project
+│       ├── README.md                 # Project documentation
+│       ├── ANOMALY_RULES.md          # Detailed rules
+│       └── detect.sh                 # CLI tool
+├── vercel.json                       # Vercel configuration
+├── package.json                      # Root npm config
+├── requirements.txt                  # Python dependencies
+└── README.md                         # This file
 ```
 
-## Local Development
+## Local Development Setup
 
 ### Prerequisites
 
 - Node.js 18+ (for Next.js)
 - Python 3.12+ (for FastAPI)
 - PostgreSQL (or Supabase account)
+- Git
 
-### Setup
+### Installation
 
 1. **Clone the repository:**
    ```bash
@@ -56,205 +70,113 @@ live-demos/
    cd live-demos
    ```
 
-2. **Install dependencies:**
+2. **Install frontend dependencies:**
    ```bash
-   # Frontend
-   cd app && npm install && cd ..
-   
-   # Backend
+   cd app
+   npm install
+   cd ..
+   ```
+
+3. **Set up Python environment:**
+   ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
-3. **Environment variables:**
+4. **Configure environment variables:**
    ```bash
+   # Frontend
    cp app/.env.example app/.env.local
+   # Update with your Supabase credentials
+   
+   # Backend
+   cp .env.example .env
    # Update with your Supabase credentials
    ```
 
----
-
 ## Running Locally
 
-### Option 1: Vercel Dev (Full Stack - Recommended)
-
-Run both Next.js and FastAPI together using Vercel's dev environment:
+### Option 1: Full Stack with Vercel Dev (Recommended)
 
 ```bash
-npm install -g vercel
-
-cd /path/to/live-demos
 npx vercel dev
 ```
 
-**What happens:**
-- Frontend runs on `http://localhost:3000` (or next available port)
-- Backend API runs on `http://localhost:3001` (or next available port)
-- Vercel handles routing and service orchestration
+This runs both frontend and backend together:
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:3001`
 
-**Stop:** Press `Ctrl+C`
+### Option 2: Separate Services
 
----
+**Terminal 1 - Frontend:**
+```bash
+cd app
+npm run dev
+```
 
-### Option 2: Next.js Only
+**Terminal 2 - Backend:**
+```bash
+source venv/bin/activate
+python -m uvicorn api.main:app --reload --port 8000
+```
 
-Run just the frontend:
+### Option 3: Frontend Only
 
 ```bash
 cd app
 npm run dev
 ```
 
-**Output:** Frontend on `http://localhost:3000`
+(Requires backend running separately)
 
-**Note:** You'll need the backend running separately (Option 3) to use upload/detection features.
+### Option 4: Backend Only
 
----
-
-### Option 3: FastAPI Only
-
-Run just the backend:
-
-```bash
-source venv/bin/activate  # Activate Python venv
-cd /path/to/live-demos
-python -m uvicorn api.main:app --reload --port 8000
-```
-
-**Output:** API on `http://localhost:8000`
-
-**Test:** Visit `http://localhost:8000/health` to verify it's running
-
----
-
-### Option 4: Run Both Separately (Full Stack)
-
-In **Terminal 1** (Next.js):
-```bash
-cd app && npm run dev
-```
-
-In **Terminal 2** (FastAPI):
 ```bash
 source venv/bin/activate
 python -m uvicorn api.main:app --reload --port 8000
 ```
 
-**Then:** 
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:8000`
+Test with: `curl http://localhost:8000/health`
 
 ---
 
-## CLI Tool: detect.sh
+## Project-Specific Documentation
 
-Run anomaly detection on claims CSV files from the command line:
+Each project has its own README with detailed information:
 
-### Usage
-
-```bash
-# Output anomalies to stdout (CSV format)
-./detect.sh path/to/claims.csv
-
-# Save to file
-./detect.sh path/to/claims.csv anomalies.csv
-
-# Example with sample data
-./detect.sh data/claims-anomaly/claims_monthly.csv
-```
-
-### Output Format
-
-CSV with columns:
-- `client_name` - Client identifier
-- `service_month` - Month (YYYY-MM-DD format)
-- `affected_metrics` - Comma-separated column names with anomalies
-- `confidence` - Detection confidence (high, medium, low)
-- `notes` - Explanation of the anomaly
-
----
-
-## Anomaly Detection Rules
-
-14 rules detect financial inconsistencies and logical impossibilities:
-
-1. **Negative Values** - Any numeric field with negative values
-2. **Medical Service Lines < Medical Claims** - Impossible relationship
-3. **RX Service Lines < RX Claims** - Impossible relationship
-4. **Medical Incentive > Medical Plan Pay** - Overpayment scenario
-5. **RX Incentive > RX Plan Pay** - Overpayment scenario
-6a. **Medical Claims Without Payment** - Orphaned claims
-6b. **RX Claims Without Payment** - Orphaned claims
-7a. **Medical Lines Without Claims** - Orphaned lines
-7b. **RX Lines Without Claims** - Orphaned lines
-8. **Activity Without Members** - Impossible scenario
-10. **Claims Per Member Too High** - Utilization spike (>50 per member)
-11. **Service Lines Per Claim Too High** - Complexity spike (>50 per claim)
-12. **RX/Medical Ratio Extreme** - Imbalanced distribution (>10x or <0.1x)
-13. **Missing Critical Fields** - Data quality issue
-
-See `/projects/claims-anomaly/rules` in the web app for detailed explanations.
-
----
-
-## Database Setup
-
-### Supabase PostgreSQL
-
-The project uses Supabase for PostgreSQL hosting. Key tables:
-
-- `claims` - Claims data from uploaded CSV files
-- `anomalies` - Detected anomalies with rules violated
-- `client_month_reviews` - Review status and feedback per (client_id, service_month)
-
-### Migrations
-
-Migrations are in `api/migrations/`. Apply them via Supabase dashboard or CLI:
-
-```bash
-# Using Supabase CLI
-supabase migration up
-```
-
----
-
-## Building for Production
-
-### Frontend Build
-
-```bash
-cd app
-npm run build
-npm run start
-```
-
-### Docker
-
-Use `vercel.json` configuration for Vercel deployment:
-
-```bash
-git push origin main
-# Vercel auto-deploys on push
-```
+- **[Claims Anomaly Detection](projects/claims-anomaly/README.md)** - Rules, CLI tool, database schema, testing guide
 
 ---
 
 ## Environment Variables
 
 ### Frontend (app/.env.local)
-
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-key
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_API_URL=/api
 ```
 
-### Backend (root/.env)
-
+### Backend (.env at repo root)
 ```
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+## Building for Production
+
+### Frontend Build
+```bash
+cd app
+npm run build
+npm run start
+```
+
+### Vercel Deployment
+```bash
+git push origin main
+# Vercel auto-deploys via GitHub integration
 ```
 
 ---
@@ -262,14 +184,12 @@ SUPABASE_SERVICE_ROLE_KEY=your-key
 ## Testing
 
 ### Frontend Tests
-
 ```bash
 cd app
 npm test
 ```
 
 ### Backend Tests
-
 ```bash
 source venv/bin/activate
 pytest
@@ -283,33 +203,45 @@ pytest
 2. Make changes and test locally
 3. Commit: `git commit -m "Description"`
 4. Push: `git push origin feature/your-feature`
-5. Create a pull request
+5. Create a pull request to `main`
+
+---
+
+## Deployment
+
+The project is configured for Vercel deployment:
+
+- Both frontend and backend deploy from a single Vercel project
+- Configuration in `vercel.json` defines services
+- Auto-deploys on push to `main`
+
+**Live Demo:** https://live-demos-prod.vercel.app
 
 ---
 
 ## Troubleshooting
 
 ### Port Already in Use
-
 ```bash
-# Find process using port 3000
 lsof -i :3000
-
-# Kill it
 kill -9 <PID>
 ```
 
-### Supabase Connection Issues
+### Frontend can't reach backend
+- Verify backend is running: `curl http://localhost:8000/health`
+- Check `NEXT_PUBLIC_API_URL` in `app/.env.local`
+- On Vercel, verify routing in `vercel.json`
 
-- Verify `NEXT_PUBLIC_SUPABASE_URL` and keys in `.env.local`
+### Python dependencies not installing
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Supabase connection issues
+- Verify credentials in environment variables
 - Check Supabase project is active
 - Ensure IP is whitelisted (or use public mode for development)
-
-### API Not Responding
-
-- Check FastAPI is running: `curl http://localhost:8000/health`
-- Verify `NEXT_PUBLIC_API_URL` points to correct backend
-- Check Python venv is activated
 
 ---
 
@@ -321,4 +253,6 @@ MIT
 
 ## Support
 
-For questions or issues, reach out via GitHub Issues.
+For project-specific issues, see the project's README in `projects/<project-name>/`
+
+For general questions, open a GitHub issue.

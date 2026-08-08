@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import ClaimsNavigation from '@/components/ClaimsNavigation'
+import ClaimsNavigation from '../components/ClaimsNavigation'
 import Pagination from '@/components/Pagination'
 import { usePagination } from '@/hooks/usePagination'
 import { getApiUrl } from '@/utils/api'

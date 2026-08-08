@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import VercelBadge from '@/components/VercelBadge'
 
 export const metadata: Metadata = {
   title: 'Live Demos',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <VercelBadge />
+        {children}
+      </body>
     </html>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import ClaimsNavigation from '@/components/ClaimsNavigation'
+import ClaimsNavigation from '../components/ClaimsNavigation'
 import styles from '../claims-anomaly.module.css'
 
 const rules = [

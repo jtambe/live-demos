@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import ClaimsNavigation from '@/components/ClaimsNavigation'
+import ClaimsNavigation from '../components/ClaimsNavigation'
 import { getApiUrl } from '@/utils/api'
 import styles from '../claims-anomaly.module.css'
 

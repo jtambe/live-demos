@@ -1,4 +1,4 @@
-"""CSV parsing and validation utilities."""
+"""CSV parsing and validation utilities for claims data."""
 
 import pandas as pd
 from datetime import datetime, timedelta

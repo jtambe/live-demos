@@ -2,7 +2,7 @@
 
 import pandas as pd
 from typing import List, Dict
-from services.anomaly_rules import detect_anomalies as detect_anomalies_rules
+from .anomaly_rules import detect_anomalies as detect_anomalies_rules
 
 def analyze_claims(df: pd.DataFrame) -> List[Dict]:
     """

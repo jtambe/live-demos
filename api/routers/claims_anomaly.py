@@ -4,35 +4,18 @@ from pydantic import BaseModel
 import io
 import pandas as pd
 
-from utils.supabase_ops import (
+from services.claims_anomaly_services.supabase_ops import (
     compute_file_hash, check_analysis_exists, upsert_claims_data,
     create_analysis_run, insert_anomalies, resolve_old_anomalies,
     get_latest_anomalies, get_grouped_anomalies, get_all_claims, get_supabase,
-    create_claim, update_claim, delete_claim, get_client_month_review, upsert_client_month_review
+    get_client_month_review, upsert_client_month_review
 )
-from utils.csv_parser import parse_csv, get_data_period, get_last_3_years_data
+from services.claims_anomaly_services.csv_parser import parse_csv, get_data_period, get_last_3_years_data
 from utils.datetime_helper import get_utc_timestamp
-from services.anomaly_analyzer import analyze_claims
+from services.claims_anomaly_services.anomaly_analyzer import analyze_claims
 
 router = APIRouter()
 
-class HelloWorldResponse(BaseModel):
-    message: str
-    project: str
-    status: str
-
-class AnomalyResponse(BaseModel):
-    id: str
-    client_name: str
-    service_month: str
-    rule_violated: str
-    affected_metrics: str
-    confidence: str
-    notes: str
-    status: str
-    first_seen_at: str
-    last_seen_at: str
-    recurrence_count: int
 
 class UploadResponse(BaseModel):
     success: bool
@@ -85,25 +68,6 @@ def _run_analysis_task(file_hash: str, df, original_filename: str):
         import traceback
         print(f"❌ Background analysis error: {str(e)}")
         print(traceback.format_exc())
-
-@router.get("/hello", response_model=HelloWorldResponse)
-async def hello_world():
-    """Hello world endpoint for claims-anomaly project"""
-    return {
-        "message": "Hello from Claims Anomaly Detection!",
-        "project": "claims-anomaly",
-        "status": "ready"
-    }
-
-@router.get("/status")
-async def project_status():
-    """Get project status"""
-    return {
-        "project": "claims-anomaly",
-        "status": "active",
-        "description": "Claims anomaly detection system",
-        "version": "0.1.0"
-    }
 
 @router.post("/upload", response_model=UploadResponse)
 async def upload_claims_csv(file: UploadFile = File(...)):
@@ -196,15 +160,6 @@ async def analyze_all_claims(background_tasks: BackgroundTasks):
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
-@router.get("/anomalies", response_model=List[AnomalyResponse])
-async def get_anomalies():
-    """Get latest detected anomalies."""
-    try:
-        anomalies = get_latest_anomalies()
-        return anomalies
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch anomalies: {str(e)}")
-
 @router.get("/anomalies/grouped")
 async def get_anomalies_grouped():
     """Get anomalies grouped by client_id + client_name + service_month."""
@@ -243,39 +198,6 @@ async def list_claims(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch claims: {str(e)}")
-
-@router.post("/claims")
-async def create_new_claim(claim_data: dict):
-    """Create a new claim record."""
-    try:
-        result = create_claim(claim_data)
-        if not result:
-            raise HTTPException(status_code=400, detail="Failed to create claim")
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create claim: {str(e)}")
-
-@router.put("/claims/{claim_id}")
-async def update_existing_claim(claim_id: int, claim_data: dict):
-    """Update an existing claim record."""
-    try:
-        result = update_claim(claim_id, claim_data)
-        if not result:
-            raise HTTPException(status_code=404, detail="Claim not found")
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update claim: {str(e)}")
-
-@router.delete("/claims/{claim_id}")
-async def delete_existing_claim(claim_id: int):
-    """Delete a claim record."""
-    try:
-        success = delete_claim(claim_id)
-        if not success:
-            raise HTTPException(status_code=404, detail="Claim not found")
-        return {"success": True, "message": "Claim deleted"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to delete claim: {str(e)}")
 
 class ClientMonthReviewSubmit(BaseModel):
     status: str
