@@ -1,23 +1,23 @@
 {
-  "services": {
-    "frontend": {
-      "root": "app/",
-      "buildCommand": "npm run build",
-      "outputDirectory": "app/.next"
+  "version": 2,
+  "builds": [
+    {
+      "src": "app/package.json",
+      "use": "@vercel/next"
     },
-    "backend": {
-      "root": "api/",
-      "entrypoint": "main:app"
+    {
+      "src": "api/main.py",
+      "use": "@vercel/python"
     }
-  },
-  "rewrites": [
+  ],
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": { "service": "backend" }
+      "src": "/api/(.*)",
+      "dest": "api/main.py"
     },
     {
-      "source": "/:path*",
-      "destination": { "service": "frontend" }
+      "src": "/(.*)",
+      "dest": "app/$1"
     }
   ]
 }
