@@ -43,7 +43,7 @@ export default function Home() {
     const checkBackend = async () => {
       try {
         const apiUrl = getApiUrl()
-        const response = await fetch(`${apiUrl}/api/health`)
+        const response = await fetch(`${apiUrl}/health`)
         if (response.ok) {
           setBackendStatus('connected')
         }

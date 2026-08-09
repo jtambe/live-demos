@@ -66,7 +66,7 @@ export default function ClaimsPage() {
       if (filterClientName) params.append('filter_client_name', filterClientName)
 
       const response = await fetch(
-        `${getApiUrl()}/api/claims-anomaly/claims?${params.toString()}`
+        `${getApiUrl()}/claims-anomaly/claims?${params.toString()}`
       )
 
       if (!response.ok) throw new Error('Failed to fetch claims')
@@ -87,7 +87,7 @@ export default function ClaimsPage() {
     setAnalyzing(true)
     try {
       // Call backend analyze endpoint (triggers analysis on all claims in database)
-      const response = await fetch(`${getApiUrl()}/api/claims-anomaly/analyze`, {
+      const response = await fetch(`${getApiUrl()}/claims-anomaly/analyze`, {
         method: 'POST',
       })
 

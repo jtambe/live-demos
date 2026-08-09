@@ -47,7 +47,7 @@ export default function AnomalyDetailsModal({ group, onClose, onReviewUpdate }: 
   const fetchReview = async () => {
     try {
       const response = await fetch(
-        `${getApiUrl()}/api/claims-anomaly/client-month-review/${group.client_id}/${group.service_month}`
+        `${getApiUrl()}/claims-anomaly/client-month-review/${group.client_id}/${group.service_month}`
       )
       if (response.ok) {
         const data = await response.json()
@@ -63,7 +63,7 @@ export default function AnomalyDetailsModal({ group, onClose, onReviewUpdate }: 
     try {
       setLoadingClaims(true)
       const response = await fetch(
-        `${getApiUrl()}/api/claims-anomaly/claims?limit=1&offset=0&filter_client_id=${group.client_id}&filter_service_month=${group.service_month}`
+        `${getApiUrl()}/claims-anomaly/claims?limit=1&offset=0&filter_client_id=${group.client_id}&filter_service_month=${group.service_month}`
       )
       if (response.ok) {
         const data = await response.json()
@@ -94,7 +94,7 @@ export default function AnomalyDetailsModal({ group, onClose, onReviewUpdate }: 
     setSaving(true)
     try {
       const response = await fetch(
-        `${getApiUrl()}/api/claims-anomaly/client-month-review/${group.client_id}/${group.service_month}`,
+        `${getApiUrl()}/claims-anomaly/client-month-review/${group.client_id}/${group.service_month}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },

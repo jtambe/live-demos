@@ -1,8 +1,10 @@
 export const getApiUrl = () => {
   // Vercel binding injects NEXT_PUBLIC_BACKEND_URL pointing to backend service
   if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-    return process.env.NEXT_PUBLIC_BACKEND_URL
+    // Binding returns direct backend URL, append /api prefix
+    // for local development
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`
   }
-  // Fallback for local dev when not running via vercel dev
-  return '/api'
+  // Cloud fallback: return empty string, rewrite handles /api routing
+  return ''
 }
