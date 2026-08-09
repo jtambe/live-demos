@@ -4,5 +4,5 @@ export const getApiUrl = () => {
     return process.env.NEXT_PUBLIC_BACKEND_URL
   }
   // Fallback for local dev when not running via vercel dev
-  return 'http://localhost:8000'
+  return '/api'
 }
