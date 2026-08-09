@@ -339,4 +339,3 @@ def delete_claim(claim_id: int) -> bool:
     except Exception as e:
         print(f"Error deleting claim: {str(e)}")
         return False
-

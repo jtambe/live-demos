@@ -11,82 +11,89 @@ This document provides instructions for setting up and running the Live Demos pr
 
 ## Environment Variables
 
-Create a `.env.local` file in the project root with:
-
+Create `app/.env.local`:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-**Note:** Variables starting with `NEXT_PUBLIC_` are exposed to the browser. Never expose secret keys.
+**Note:** Variables starting with `NEXT_PUBLIC_` are exposed to browser. Never expose secret keys.
 
-## Frontend Setup (Next.js)
+## Running Locally (Recommended)
 
+**Run both frontend + backend together:**
 ```bash
-cd app
-npm install
-npm run dev
+npx vercel dev
 ```
 
-The frontend will be available at `http://localhost:3000`
+- Frontend: `http://localhost:3000`
+- Backend: automatic (Service Binding connects to it)
+- API: accessible via `/api/...` paths
 
-## Backend Setup (FastAPI)
+## Alternative: Separate Services
 
+**Terminal 1 - Frontend:**
 ```bash
-cd api
-python -m venv venv
-
-# On macOS/Linux:
-source venv/bin/activate
-
-# On Windows:
-venv\Scripts\activate
-
-pip install -r requirements.txt
+cd app && npm install && npm run dev
 ```
 
-### Run the backend
-
+**Terminal 2 - Backend:**
 ```bash
-python -m uvicorn main:app --reload --port 8000
+# Install dependencies (uv + pyproject.toml)
+uv pip install -e .
+
+# Or use pip
+pip install -e .
+
+# Run
+python -m uvicorn api.main:app --reload --port 8000
 ```
 
-The backend will be available at `http://localhost:8000`
-- API docs: `http://localhost:8000/docs`
-- Health check: `http://localhost:8000/health`
+Test backend: `curl http://localhost:8000/api/health`
 
 ## Project Structure
 
 ```
 live-demos/
-├── app/                              # Next.js frontend
+├── app/                                    # Next.js 16 frontend
 │   ├── app/
-│   │   ├── page.tsx                 # Landing page
-│   │   ├── layout.tsx               # Root layout
-│   │   ├── globals.css              # Global styles
-│   │   └── projects/                # Project pages (to be added)
-│   │       └── claims-anomaly/
-│   ├── next.config.js               # Next.js configuration
-│   ├── tsconfig.json                # TypeScript config
+│   │   ├── page.tsx                       # Landing page
+│   │   ├── layout.tsx                     # Root layout
+│   │   └── projects/claims-anomaly/       # Project-specific pages
+│   │       ├── components/                # Project components
+│   │       ├── anomalies-grouped/page.tsx
+│   │       ├── claims/page.tsx
+│   │       ├── upload/page.tsx
+│   │       └── rules/page.tsx
+│   ├── components/                        # Shared components
+│   ├── hooks/                             # Shared hooks
+│   ├── utils/                             # Utilities (api.ts)
 │   └── package.json
 │
-├── api/                              # FastAPI backend
-│   ├── main.py                      # FastAPI app entry point
-│   ├── config.py                    # Configuration management
-│   ├── db.py                        # Supabase client initialization
+├── api/                                   # FastAPI backend
+│   ├── main.py                            # Entry point
 │   ├── routers/
-│   │   ├── __init__.py
-│   │   └── claims_anomaly.py        # Claims anomaly endpoints
-│   ├── requirements.txt             # Python dependencies
-│   └── .gitignore
+│   │   └── claims_anomaly.py              # Endpoints
+│   ├── services/
+│   │   └── claims_anomaly_services/       # Business logic
+│   │       ├── anomaly_rules.py
+│   │       ├── anomaly_analyzer.py
+│   │       ├── supabase_ops.py
+│   │       ├── csv_parser.py
+│   │       └── anomaly_export.py
+│   └── utils/
 │
-├── .env.example                      # Environment variables template
-├── .gitignore
-├── vercel.json                       # Vercel deployment config
-├── SETUP.md                          # This file
-└── README.md                         # Project overview
+├── data/claims-anomaly/                   # Sample data
+├── projects/claims-anomaly/               # Project files
+│   ├── README.md
+│   ├── ANOMALY_RULES.md
+│   └── detect.sh                          # CLI tool
+│
+├── pyproject.toml                         # Python dependencies (uv)
+├── vercel.json                            # Services + routing
+├── SETUP.md                               # This file
+└── README.md                              # Project overview
 ```
 
 ## Frontend Development
@@ -103,64 +110,63 @@ To add a new project:
 
 ## Backend Development
 
-The FastAPI server includes:
-- CORS middleware for frontend communication
-- Health check endpoint
-- Router structure for organizing project endpoints
+**Structure:**
+- `api/routers/` - Endpoint definitions (e.g., claims_anomaly.py)
+- `api/services/claims_anomaly_services/` - Business logic
+- `api/main.py` - FastAPI app + router registration
 
-To add a new project endpoint:
-1. Create a new router in `api/routers/new_project.py`
-2. Import and include the router in `main.py`
-3. Access at `/api/new-project/*`
+**Add new project:**
+1. Create `api/routers/new_project.py` with APIRouter
+2. Create `api/services/new_project_services/` for logic
+3. Register in `main.py`: `app.include_router(router, prefix="/new-project")`
+4. Accessible at `/api/new-project/*`
 
 ## Testing
 
-### Test the backend
-
+**Backend health:**
 ```bash
-curl http://localhost:8000/health
-curl http://localhost:8000/api/claims-anomaly/hello
+curl http://localhost:8000/api/health
 ```
 
-### Test the frontend
-
-Visit `http://localhost:3000` and check if:
-- Landing page loads
-- Project cards are visible
-- Backend status shows connected (if backend is running)
-- Clicking on Claims Anomaly project works
+**Frontend:**
+- Visit `http://localhost:3000`
+- Landing page loads ✓
+- Project cards visible ✓
+- Backend status shows "connected" ✓
+- Click Claims Anomaly project ✓
 
 ## Deployment
 
-### Vercel Deployment
-
-1. Create a Vercel project linked to your GitHub repository
-2. Configure environment variables in Vercel project settings:
+**Vercel (automatic on push to main):**
+1. Link GitHub repo to Vercel
+2. Set environment variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_API_URL` (point to your deployed FastAPI endpoint)
    - `SUPABASE_SERVICE_ROLE_KEY`
-3. Both frontend and backend deploy automatically on push to main
+3. Frontend + Backend deploy together via `vercel.json` services config
 
-### Environment URLs
-
-- **Development:** `http://localhost:3000` (frontend), `http://localhost:8000` (backend)
-- **Production:** Will be set up on first Vercel deployment
+**Routing:**
+- Local: Service Binding injects backend URL
+- Cloud: Rewrites route `/api/*` to backend service
 
 ## Troubleshooting
 
-### Backend connection fails
-- Ensure FastAPI is running on port 8000
-- Check `NEXT_PUBLIC_API_URL` in `.env.local`
-- Check browser console for CORS errors
+**Using `npx vercel dev`:**
+- Backend runs on random port (handled by Service Binding automatically)
+- Frontend can't reach backend directly (use `/api/...` paths)
+- Check Vercel logs if API calls fail
 
-### Module not found errors
-- Ensure you're in the correct directory (`app/` or `api/`)
-- Run `npm install` in `app/` or `pip install -r requirements.txt` in `api/`
+**Using separate services:**
+- Backend health: `curl http://localhost:8000/api/health`
+- Restart backend: `python -m uvicorn api.main:app --reload --port 8000`
 
-### Port already in use
-- Frontend: Change port with `npm run dev -- -p 3001`
-- Backend: Change port with `python -m uvicorn main:app --reload --port 8001`
+**Port conflicts:**
+- Frontend: `npm run dev -- -p 3001`
+- Backend: `python -m uvicorn api.main:app --reload --port 8001`
+
+**Module not found:**
+- Frontend: `cd app && npm install`
+- Backend: `uv pip install -e .` or `pip install -e .`
 
 ## Next Steps
 

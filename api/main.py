@@ -34,7 +34,7 @@ app.add_middleware(
 # Include the claims anomaly router
 app.include_router(claims_router, prefix="/api/claims-anomaly")
 
-@app.get("/health")
+@app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
     return {"status": "ok", "service": "claims-anomaly"}

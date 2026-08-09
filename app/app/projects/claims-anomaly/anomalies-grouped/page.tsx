@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import ClaimsNavigation from '@/components/ClaimsNavigation'
+import ClaimsNavigation from '../components/ClaimsNavigation'
 import Pagination from '@/components/Pagination'
 import { usePagination } from '@/hooks/usePagination'
 import { getApiUrl } from '@/utils/api'
 import styles from '../claims-anomaly.module.css'
 import tableRowStyles from '@/components/TableRowNumbers.module.css'
-import AnomalyDetailsModal from '@/components/AnomalyDetailsModal'
-import BulkReviewModal from '@/components/BulkReviewModal'
+import AnomalyDetailsModal from '../components/AnomalyDetailsModal'
+import BulkReviewModal from '../components/BulkReviewModal'
 
 interface AnomalyGroup {
   client_id: number
@@ -60,7 +60,12 @@ export default function AnomaliesGroupedPage() {
   const fetchGroupedAnomalies = async () => {
     try {
       setLoading(true)
+
+      // const response1 = await fetch(`http://127.0.0.1:56187/api/claims-anomaly/anomalies/grouped`)
+      // console.log('local:', "http://127.0.0.1:56187/api/claims-anomaly/anomalies/grouped", 'response1:', response1)  // Debugging line
+
       const response = await fetch(`${getApiUrl()}/claims-anomaly/anomalies/grouped`)
+      console.log('getApiUrl():', getApiUrl(), 'response:', response)  // Debugging line
 
       if (!response.ok) throw new Error('Failed to fetch anomalies')
 

@@ -8,7 +8,7 @@ Used by detect.sh to generate anomalies.csv from claims.csv
 import pandas as pd
 import sys
 import csv
-from anomaly_rules import detect_anomalies
+from .anomaly_rules import detect_anomalies
 
 
 def main():
