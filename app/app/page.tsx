@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { getApiUrl } from '@/utils/api'
 
 interface Project {
   id: string
@@ -41,7 +42,7 @@ export default function Home() {
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+        const apiUrl = getApiUrl()
         const response = await fetch(`${apiUrl}/health`)
         if (response.ok) {
           setBackendStatus('connected')

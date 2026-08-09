@@ -60,7 +60,12 @@ export default function AnomaliesGroupedPage() {
   const fetchGroupedAnomalies = async () => {
     try {
       setLoading(true)
+
+      // const response1 = await fetch(`http://127.0.0.1:56187/api/claims-anomaly/anomalies/grouped`)
+      // console.log('local:', "http://127.0.0.1:56187/api/claims-anomaly/anomalies/grouped", 'response1:', response1)  // Debugging line
+
       const response = await fetch(`${getApiUrl()}/claims-anomaly/anomalies/grouped`)
+      console.log('getApiUrl():', getApiUrl(), 'response:', response)  // Debugging line
 
       if (!response.ok) throw new Error('Failed to fetch anomalies')
 
