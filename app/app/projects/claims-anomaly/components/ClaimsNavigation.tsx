@@ -8,22 +8,22 @@ interface ClaimsNavigationProps {
 export default function ClaimsNavigation({ activePage }: ClaimsNavigationProps) {
   return (
     <nav className={styles.nav}>
-      <Link href="/projects/claims-anomaly/upload">
+      <Link href="/projects/claims-anomaly/upload" prefetch={false}>
         <button className={`${styles.navButton} ${activePage === 'upload' ? styles.active : ''}`}>
           📤 Upload Claims
         </button>
       </Link>
-      <Link href="/projects/claims-anomaly/claims">
+      <Link href="/projects/claims-anomaly/claims" prefetch={false}>
         <button className={`${styles.navButton} ${activePage === 'claims' ? styles.active : ''}`}>
           📊 View Claims
         </button>
       </Link>
-      <Link href="/projects/claims-anomaly/anomalies">
+      <Link href="/projects/claims-anomaly/anomalies" prefetch={false}>
         <button className={`${styles.navButton} ${activePage === 'anomalies' ? styles.active : ''}`}>
           🔍 View Anomalies
         </button>
       </Link>
-      <Link href="/projects/claims-anomaly/rules">
+      <Link href="/projects/claims-anomaly/rules" prefetch={false}>
         <button className={`${styles.navButton} ${activePage === 'rules' ? styles.active : ''}`}>
           📋 Rules
         </button>
