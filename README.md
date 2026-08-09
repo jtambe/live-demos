@@ -15,7 +15,7 @@ Full-stack application for detecting financial inconsistencies in insurance clai
 
 ## Tech Stack
 
-- **Frontend:** Next.js 14 (TypeScript, React)
+- **Frontend:** Next.js 16 (TypeScript, React)
 - **Backend:** FastAPI with background task processing
 - **Database:** PostgreSQL (Supabase)
 - **Hosting:** Vercel (serverless)
@@ -155,7 +155,6 @@ Each project has its own README with detailed information:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-NEXT_PUBLIC_API_URL=/api
 ```
 
 ### Backend (.env at repo root)
@@ -163,6 +162,8 @@ NEXT_PUBLIC_API_URL=/api
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
+
+**Note:** API routing handled via Service Bindings (local) and rewrites (cloud). No need for explicit API URL.
 
 ## Building for Production
 

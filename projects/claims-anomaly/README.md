@@ -173,7 +173,6 @@ row_count, anomalies_found, upload_date
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
-NEXT_PUBLIC_API_URL=/api
 ```
 
 ### Backend (.env at repo root)
