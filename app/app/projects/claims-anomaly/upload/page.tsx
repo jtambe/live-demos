@@ -42,7 +42,7 @@ export default function UploadPage() {
       formData.append('file', file)
 
       const response = await fetch(
-        `${getApiUrl()}/claims-anomaly/upload`,
+        `${getApiUrl()}/api/claims-anomaly/upload`,
         {
           method: 'POST',
           body: formData,
