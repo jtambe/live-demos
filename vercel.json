@@ -1,23 +1,16 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "app/package.json",
-      "use": "@vercel/next"
+  "services": {
+    "frontend": {
+      "root": "app/",
+      "framework": "nextjs"
     },
-    {
-      "src": "api/main.py",
-      "use": "@vercel/python"
+    "backend": {
+      "root": "api/",
+      "entrypoint": "main:app"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "api/main.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "app/$1"
-    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "backend" } },
+    { "source": "/app/(.*)", "destination": { "service": "frontend" } }
   ]
 }
