@@ -80,7 +80,7 @@ export default function Home() {
 
       <div className="projects-grid">
         {projects.map((project) => (
-          <Link key={project.id} href={project.path} prefetch="auto">
+          <Link key={project.id} href={project.path}>
             <div className="project-card">
               <h2>{project.name}</h2>
               <p>{project.description}</p>
