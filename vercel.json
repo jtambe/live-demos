@@ -3,6 +3,7 @@
     "frontend": {
       "root": "app/",
       "framework": "nextjs",
+      "outputDirectory": ".next",
       "bindings": [
         {
           "type": "service",
