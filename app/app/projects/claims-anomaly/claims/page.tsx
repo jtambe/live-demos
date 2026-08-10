@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import ClaimsNavigation from '../components/ClaimsNavigation'
 import Pagination from '@/components/Pagination'
 import { usePagination } from '@/hooks/usePagination'
@@ -25,6 +26,7 @@ interface Claim {
 }
 
 export default function ClaimsPage() {
+  const router = useRouter()
   const [claims, setClaims] = useState<Claim[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -97,7 +99,7 @@ export default function ClaimsPage() {
       console.log('Analysis started:', data)
 
       // Redirect to anomalies page
-      window.location.href = '/projects/claims-anomaly/anomalies'
+      router.push('/projects/claims-anomaly/anomalies')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed')
       setAnalyzing(false)

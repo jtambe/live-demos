@@ -10,5 +10,5 @@ export default function ClaimsAnomalyPage() {
     router.push('/projects/claims-anomaly/upload')
   }, [router])
 
-  return null
+  return <div style={{ padding: '40px', textAlign: 'center' }}><p>Loading...</p></div>
 }
