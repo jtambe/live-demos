@@ -45,13 +45,13 @@ WITH CHECK (
   (SELECT role FROM mra_vbc_opps.users WHERE email = mra_vbc_opps.current_user_email()) IN ('Coder', 'Admin')
 );
 
--- Grant permissions to expose schema to PostgREST
-GRANT USAGE ON SCHEMA mra_vbc_opps TO anon, authenticated;
-GRANT SELECT ON ALL TABLES IN SCHEMA mra_vbc_opps TO anon, authenticated;
-ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT SELECT ON TABLES TO anon, authenticated;
+-- Grant permissions: authenticated only (RLS enforces row-level access)
+GRANT USAGE ON SCHEMA mra_vbc_opps TO authenticated;
+GRANT SELECT ON ALL TABLES IN SCHEMA mra_vbc_opps TO authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT SELECT ON TABLES TO authenticated;
 GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA mra_vbc_opps TO authenticated;
 ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT INSERT, UPDATE, DELETE ON TABLES TO authenticated;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA mra_vbc_opps TO anon, authenticated;
-ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT USAGE, SELECT ON SEQUENCES TO anon, authenticated;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA mra_vbc_opps TO anon, authenticated;
-ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT EXECUTE ON FUNCTIONS TO anon, authenticated;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA mra_vbc_opps TO authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT USAGE, SELECT ON SEQUENCES TO authenticated;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA mra_vbc_opps TO authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT EXECUTE ON FUNCTIONS TO authenticated;

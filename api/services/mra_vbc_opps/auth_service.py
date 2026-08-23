@@ -1,73 +1,61 @@
 import jwt
-import hashlib
 import logging
-from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict
 from db import supabase
-from .constants import JWT_SECRET_KEY, JWT_ALGORITHM, JWT_TOKEN_EXPIRE_HOURS
+import os
 
 logger = logging.getLogger(__name__)
+
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
 
 
 class AuthService:
     @staticmethod
-    def hash_password(password: str) -> str:
-        """Hash password using SHA-256"""
-        return hashlib.sha256(password.encode()).hexdigest()
-
-    @staticmethod
-    def verify_password(password: str, hashed: str) -> bool:
-        """Verify password against hash"""
-        return hashlib.sha256(password.encode()).hexdigest() == hashed
-
-    @staticmethod
-    def create_token(email: str, role: str) -> str:
-        """Create JWT token"""
-        now = datetime.now(timezone.utc)
-        payload = {
-            'email': email,
-            'role': role,
-            'exp': now + timedelta(hours=JWT_TOKEN_EXPIRE_HOURS),
-            'iat': now
-        }
-        return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
-
-    @staticmethod
     def verify_token(token: str) -> Optional[Dict]:
-        """Verify and decode JWT token"""
+        """Verify Supabase Auth JWT token"""
         try:
-            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            # Verify using Supabase's JWT secret
+            payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"])
             return payload
         except jwt.ExpiredSignatureError:
+            logger.warning("Token expired")
             return None
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError as e:
+            logger.warning(f"Invalid token: {str(e)}")
             return None
 
     @staticmethod
     def login(email: str, password: str) -> Dict:
-        """Authenticate user and return token"""
+        """Authenticate user via Supabase Auth and return token"""
         try:
-            result = supabase.schema('mra_vbc_opps').table('users').select('id, email, role, password_hash').eq('email', email).execute()
+            # Call Supabase Auth API to sign in
+            auth_response = supabase.auth.sign_in_with_password({
+                'email': email,
+                'password': password
+            })
 
-            if not result.data:
+            if not auth_response.user:
                 return {'success': False, 'error': 'Invalid email or password'}
 
-            user = result.data[0]
-            if not AuthService.verify_password(password, user['password_hash']):
-                return {'success': False, 'error': 'Invalid email or password'}
+            # Get user's role and provider info from mra_vbc_opps.users
+            user_result = supabase.schema('mra_vbc_opps').table('users').select('id, role').eq('email', email).execute()
+            if not user_result.data:
+                return {'success': False, 'error': 'User not found in system'}
 
-            token = AuthService.create_token(user['email'], user['role'])
+            user_data = user_result.data[0]
+
             return {
                 'success': True,
-                'token': token,
+                'token': auth_response.session.access_token,
                 'user': {
-                    'id': user['id'],
-                    'email': user['email'],
-                    'role': user['role']
+                    'id': user_data['id'],
+                    'email': email,
+                    'role': user_data['role']
                 }
             }
         except Exception as e:
-            return {'success': False, 'error': str(e)}
+            logger.error(f"Login error: {str(e)}", exc_info=True)
+            return {'success': False, 'error': 'Authentication failed'}
 
     @staticmethod
     def get_user_providers(user_id: int) -> list:
@@ -80,23 +68,36 @@ class AuthService:
 
     @staticmethod
     def create_user(email: str, password: str, role: str) -> Dict:
-        """Create new user (Admin only)"""
+        """Create new user in Supabase Auth (Admin only)"""
         try:
-            # Check if user exists
-            result = supabase.schema('mra_vbc_opps').table('users').select('id').eq('email', email).execute()
-            if result.data:
-                return {'success': False, 'error': 'User already exists'}
-
-            # Create user
-            hashed_pw = AuthService.hash_password(password)
-            result = supabase.schema('mra_vbc_opps').table('users').insert({
+            # Create user in Supabase Auth
+            auth_user = supabase.auth.admin.create_user({
                 'email': email,
-                'password_hash': hashed_pw,
+                'password': password,
+                'email_confirm': True  # Auto-confirm email
+            })
+
+            if not auth_user.user:
+                return {'success': False, 'error': 'Failed to create auth user'}
+
+            # Create user record in mra_vbc_opps.users with role
+            user_result = supabase.schema('mra_vbc_opps').table('users').insert({
+                'email': email,
+                'password_hash': '',  # Not used with Supabase Auth
                 'role': role
             }).execute()
 
-            return {'success': True, 'user_id': result.data[0]['id']}
+            if not user_result.data:
+                # Rollback: delete the auth user if DB insert fails
+                try:
+                    supabase.auth.admin.delete_user(auth_user.user.id)
+                except Exception:
+                    pass
+                return {'success': False, 'error': 'Failed to create user record'}
+
+            return {'success': True, 'user_id': user_result.data[0]['id']}
         except Exception as e:
+            logger.error(f"Create user error: {str(e)}", exc_info=True)
             return {'success': False, 'error': str(e)}
 
     @staticmethod
