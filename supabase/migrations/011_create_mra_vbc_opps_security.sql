@@ -24,18 +24,22 @@ USING (
   (SELECT role FROM mra_vbc_opps.users WHERE email = mra_vbc_opps.current_user_email()) = 'Admin'
 );
 
--- RLS Policy: Admin-only updates
-CREATE POLICY admin_update_policy ON mra_vbc_opps.opportunities
+-- RLS Policy: Coders can update opportunities for their assigned providers
+CREATE POLICY coder_update_disposition_policy ON mra_vbc_opps.opportunities
 FOR UPDATE
 USING (
-  (SELECT role FROM mra_vbc_opps.users WHERE email = mra_vbc_opps.current_user_email()) = 'Admin'
-);
-
--- RLS Policy: Admin-only deletes
-CREATE POLICY admin_delete_policy ON mra_vbc_opps.opportunities
-FOR DELETE
-USING (
-  (SELECT role FROM mra_vbc_opps.users WHERE email = mra_vbc_opps.current_user_email()) = 'Admin'
+  provider_id IN (
+    SELECT provider_id FROM mra_vbc_opps.provider_user_mappings
+    WHERE user_id = (SELECT id FROM mra_vbc_opps.users WHERE email = mra_vbc_opps.current_user_email())
+  )
+  OR (SELECT role FROM mra_vbc_opps.users WHERE email = mra_vbc_opps.current_user_email()) = 'Admin'
+)
+WITH CHECK (
+  provider_id IN (
+    SELECT provider_id FROM mra_vbc_opps.provider_user_mappings
+    WHERE user_id = (SELECT id FROM mra_vbc_opps.users WHERE email = mra_vbc_opps.current_user_email())
+  )
+  OR (SELECT role FROM mra_vbc_opps.users WHERE email = mra_vbc_opps.current_user_email()) = 'Admin'
 );
 
 -- RLS Policy: Coder dispositions
