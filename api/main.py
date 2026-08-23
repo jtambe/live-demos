@@ -15,6 +15,7 @@ try:
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
     from routers.claims_anomaly import router as claims_router
+    from routers.mra_vbc_opps import router as mra_router
 except ImportError as e:
     print(f"Import error: {e}")
     raise
@@ -31,8 +32,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include the claims anomaly router
+# Include routers
 app.include_router(claims_router, prefix="/api/claims-anomaly")
+app.include_router(mra_router, prefix="/api/mra-vbc-opps")
 
 @app.get("/api/health")
 async def health_check():

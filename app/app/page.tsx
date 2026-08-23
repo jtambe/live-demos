@@ -21,10 +21,10 @@ const projects: Project[] = [
     status: 'active',
   },
   {
-    id: 'project-2',
-    name: 'Project 2',
+    id: 'mra-vbc-opps',
+    name: 'MRA VBC Opportunities',
     description: 'Coming soon...',
-    path: '/projects/project-2',
+    path: '/projects/mra-vbc-opps',
     status: 'soon',
   },
   {
