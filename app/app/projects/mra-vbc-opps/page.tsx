@@ -42,12 +42,12 @@ export default function MraVbcOppsPage() {
       <section style={{ marginTop: '40px', padding: '20px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
         <h2>Get Started</h2>
         <div style={{ marginTop: '20px', display: 'flex', gap: '16px' }}>
-          <Link href="/projects/mra-vbc-opps/upload" style={{ padding: '12px 24px', backgroundColor: '#0070f3', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
+          <a href="/projects/mra-vbc-opps/upload" style={{ padding: '12px 24px', backgroundColor: '#0070f3', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
             Upload CSV
-          </Link>
-          <Link href="/projects/mra-vbc-opps/work-queue" style={{ padding: '12px 24px', backgroundColor: '#0070f3', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
+          </a>
+          <a href="/projects/mra-vbc-opps/work-queue" style={{ padding: '12px 24px', backgroundColor: '#0070f3', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
             Work Queue
-          </Link>
+          </a>
           {!loading && user?.role === 'Admin' && (
             <Link href="/projects/mra-vbc-opps/admin/users" style={{ padding: '12px 24px', backgroundColor: '#666', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
               Admin Dashboard
@@ -56,46 +56,39 @@ export default function MraVbcOppsPage() {
         </div>
       </section>
 
-      <section style={{ marginTop: '40px' }}>
-        <h2>Overview</h2>
-        <p>
-          An MRA platform for managing Medicare Advantage (MA) risk adjustment coding opportunities.
-          Consolidates healthcare provider records, identifies chronic condition documentation gaps,
-          and routes them to clinical reviewers for disposition and submission.
+      <section style={{ marginTop: '30px', padding: '20px', backgroundColor: '#e8f4f8', borderRadius: '8px', borderLeft: '4px solid #0070f3' }}>
+        <h2 style={{ marginTop: 0 }}>Overview</h2>
+        <p style={{ lineHeight: '1.6', color: '#333' }}>
+          An MRA platform for managing Medicare Advantage (MA) risk adjustment coding opportunities. 
+          Consolidates healthcare provider records, identifies chronic condition documentation gaps, and routes them to clinical reviewers for disposition and submission.
         </p>
       </section>
 
-      <section style={{ marginTop: '40px' }}>
-        <h2>Core Capabilities</h2>
-        <ul>
-          <li><strong>C1 - Data Ingestion:</strong> Upload CSV files with member diagnoses, HCC mappings, and coding initiatives</li>
-          <li><strong>C2 - Work Queue:</strong> Member-centric view of opportunities with filtering and pagination</li>
-          <li><strong>C3 - Disposition Workflow:</strong> Coders record decisions (Confirmed/Denied/Pending/Referred) with justification</li>
-          <li><strong>C4 - Auth & RBAC:</strong> Role-based access (Coder/Admin) with provider scoping</li>
-        </ul>
+      <section style={{ marginTop: '40px', padding: '20px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+        <h2>Documentation & Diagrams</h2>
+        <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <a href="https://github.com/jtambe/live-demos/blob/main/projects/mra-vbc-opps-raf/README.md" target="_blank" rel="noopener noreferrer" style={{ padding: '16px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#0070f3' }}>
+            <strong>📄 README.md</strong>
+            <p style={{ margin: '8px 0 0 0', fontSize: '0.9em', color: '#666' }}>Core requirements, real-world scenarios, and design decisions</p>
+          </a>
+          <a href="https://github.com/jtambe/live-demos/blob/main/projects/mra-vbc-opps-raf/tests.md" target="_blank" rel="noopener noreferrer" style={{ padding: '16px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#0070f3' }}>
+            <strong>✅ tests.md</strong>
+            <p style={{ margin: '8px 0 0 0', fontSize: '0.9em', color: '#666' }}>Testing instructions for Python and TypeScript</p>
+          </a>
+          <a href="https://github.com/jtambe/live-demos/blob/main/supabase/migrations" target="_blank" rel="noopener noreferrer" style={{ padding: '16px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#0070f3' }}>
+            <strong>🗄️ Database Schema</strong>
+            <p style={{ margin: '8px 0 0 0', fontSize: '0.9em', color: '#666' }}>SQL migrations and table definitions</p>
+          </a>
+          <a href="https://miro.com/app/board/uXjVHvSWGuU=/?moveToWidget=3458764681535412731&cot=14" target="_blank" rel="noopener noreferrer" style={{ padding: '16px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#0070f3' }}>
+            <strong>🏗️ Architecture Diagram</strong>
+            <p style={{ margin: '8px 0 0 0', fontSize: '0.9em', color: '#666' }}>System design and component interactions</p>
+          </a>
+          <a href="https://miro.com/app/board/uXjVHvSWGuU=/?moveToWidget=3458764681536252520&cot=14" target="_blank" rel="noopener noreferrer" style={{ padding: '16px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#0070f3' }}>
+            <strong>📊 UML Diagram</strong>
+            <p style={{ margin: '8px 0 0 0', fontSize: '0.9em', color: '#666' }}>Data models and entity relationships</p>
+          </a>
+        </div>
       </section>
-
-      <section style={{ marginTop: '40px' }}>
-        <h2>Key Domain Concepts</h2>
-        <ul>
-          <li><strong>RAF Score:</strong> Risk Adjustment Factor driven by HCC codes; only HCC-mapped conditions drive revenue</li>
-          <li><strong>Identity Resolution:</strong> Single member_id may have multiple policy_numbers across payers (dual-payer handling)</li>
-          <li><strong>Year-over-Year Tracking:</strong> Same condition across PY2024/PY2025 files; latest source wins</li>
-          <li><strong>Cross-Payer Conflicts:</strong> Same ICD-10 maps to different HCCs per payer; present both for team review</li>
-          <li><strong>Non-HCC Records:</strong> Stored but excluded from work queue (no revenue impact)</li>
-        </ul>
-      </section>
-
-      <section style={{ marginTop: '40px' }}>
-        <h2>Design Decisions</h2>
-        <ul>
-          <li>Synchronous CSV ingestion (no background jobs on Vercel/Supabase free tier)</li>
-          <li>Immutable disposition audit log; current state tracked separately</li>
-          <li>Provider scoping enforced at query level for coders</li>
-          <li>Version tracking via <code>is_current</code> flag for historical analysis</li>
-        </ul>
-      </section>
-
     </main>
   )
 }

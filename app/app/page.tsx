@@ -23,9 +23,9 @@ const projects: Project[] = [
   {
     id: 'mra-vbc-opps',
     name: 'MRA VBC Opportunities',
-    description: 'Coming soon...',
+    description: 'Member-centric work queue for VBC coding opportunities with disposition tracking',
     path: '/projects/mra-vbc-opps',
-    status: 'soon',
+    status: 'active',
   },
   {
     id: 'project-3',
