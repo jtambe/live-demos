@@ -75,7 +75,7 @@ export default function MraVbcOppsPage() {
             <strong>✅ tests.md</strong>
             <p style={{ margin: '8px 0 0 0', fontSize: '0.9em', color: '#666' }}>Testing instructions for Python and TypeScript</p>
           </a>
-          <a href="https://github.com/jtambe/live-demos/blob/main/supabase/migrations" target="_blank" rel="noopener noreferrer" style={{ padding: '16px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#0070f3' }}>
+          <a href="https://github.com/jtambe/live-demos/blob/main/projects/mra-vbc-opps-raf/Database.md" target="_blank" rel="noopener noreferrer" style={{ padding: '16px', backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '4px', textDecoration: 'none', color: '#0070f3' }}>
             <strong>🗄️ Database Schema</strong>
             <p style={{ margin: '8px 0 0 0', fontSize: '0.9em', color: '#666' }}>SQL migrations and table definitions</p>
           </a>
