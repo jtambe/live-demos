@@ -4,7 +4,7 @@ CREATE SCHEMA IF NOT EXISTS mra_vbc_opps;
 CREATE TABLE IF NOT EXISTS mra_vbc_opps.payers (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL UNIQUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS mra_vbc_opps.providers (
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS mra_vbc_opps.providers (
   name VARCHAR(255) NOT NULL,
   provider_group VARCHAR(255) NOT NULL,
   UNIQUE(name, provider_group),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS mra_vbc_opps.members (
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS mra_vbc_opps.members (
   member_id VARCHAR(50) NOT NULL UNIQUE,
   name_encrypted BYTEA NOT NULL,
   dob_encrypted BYTEA NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS mra_vbc_opps.member_identifiers (
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS mra_vbc_opps.member_identifiers (
   payer_id INTEGER NOT NULL REFERENCES mra_vbc_opps.payers(id),
   policy_number VARCHAR(100) NOT NULL,
   UNIQUE(member_id, payer_id, policy_number),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS mra_vbc_opps.uploads (
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS mra_vbc_opps.uploads (
   filename VARCHAR(255) NOT NULL,
   uploaded_by VARCHAR(255) NOT NULL,
   record_count INTEGER NOT NULL,
-  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  uploaded_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS mra_vbc_opps.opportunities (
@@ -54,11 +54,11 @@ CREATE TABLE IF NOT EXISTS mra_vbc_opps.opportunities (
   evidence TEXT,
   last_dos DATE,
   source_file VARCHAR(255),
+  source_year_month VARCHAR(6),
   disposition_status VARCHAR(50) DEFAULT 'Open',
   is_current BOOLEAN DEFAULT true,
-  UNIQUE(member_id, provider_id, payer_id, icd_10, source_file),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC',
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS mra_vbc_opps.dispositions (
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS mra_vbc_opps.dispositions (
   status VARCHAR(50) NOT NULL,
   justification TEXT NOT NULL,
   set_by VARCHAR(255) NOT NULL,
-  set_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC',
+  set_at TIMESTAMPTZ DEFAULT now(),
   previous_status VARCHAR(50)
 );
 
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS mra_vbc_opps.users (
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(50) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS mra_vbc_opps.provider_user_mappings (
@@ -84,10 +84,11 @@ CREATE TABLE IF NOT EXISTS mra_vbc_opps.provider_user_mappings (
   user_id INTEGER NOT NULL REFERENCES mra_vbc_opps.users(id),
   provider_id INTEGER NOT NULL REFERENCES mra_vbc_opps.providers(id),
   UNIQUE(user_id, provider_id),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
 -- Indexes for query performance
+CREATE UNIQUE INDEX IF NOT EXISTS idx_opportunities_unique_current ON mra_vbc_opps.opportunities(member_id, provider_id, payer_id, icd_10) WHERE is_current = true;
 CREATE INDEX IF NOT EXISTS idx_opportunities_member_provider_payer ON mra_vbc_opps.opportunities(member_id, provider_id, payer_id);
 CREATE INDEX IF NOT EXISTS idx_opportunities_provider ON mra_vbc_opps.opportunities(provider_id);
 CREATE INDEX IF NOT EXISTS idx_opportunities_payer ON mra_vbc_opps.opportunities(payer_id);

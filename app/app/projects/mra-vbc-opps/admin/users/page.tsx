@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { getApiUrl } from '@/utils/api'
 
 interface User {
@@ -138,12 +137,7 @@ export default function AdminUsersPage() {
 
   return (
     <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '40px' }}>
-        <Link href="/projects/mra-vbc-opps" style={{ color: '#0070f3', textDecoration: 'none' }}>
-          ← Back to MRA VBC Opps
-        </Link>
-        <h1 style={{ margin: '20px 0 0 0' }}>User Management</h1>
-      </div>
+      <h1 style={{ marginBottom: '40px' }}>User Management</h1>
 
       {error && (
         <div
@@ -270,7 +264,6 @@ export default function AdminUsersPage() {
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Email</th>
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Role</th>
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Assigned Providers</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -291,71 +284,72 @@ export default function AdminUsersPage() {
                   </span>
                 </td>
                 <td style={{ padding: '12px' }}>
-                  <div style={{ marginBottom: '8px' }}>
-                    {user.providers.map((pId) => {
-                      const provider = providers.find((p) => p.id === pId)
-                      return (
-                        <div
-                          key={pId}
-                          style={{
-                            display: 'inline-block',
-                            marginRight: '8px',
-                            marginBottom: '8px',
-                            padding: '6px 12px',
-                            backgroundColor: '#e0f0ff',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                          }}
-                        >
-                          {provider?.name} ({provider?.provider_group})
-                          <button
-                            onClick={() => handleRemoveProvider(user.id, pId)}
-                            style={{
-                              marginLeft: '8px',
-                              background: 'none',
-                              border: 'none',
-                              color: '#f44',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                            }}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <select
-                    onChange={(e) => {
-                      const pId = parseInt(e.target.value)
-                      if (pId) {
-                        handleAssignProvider(user.id, pId)
-                        e.target.value = ''
-                      }
-                    }}
-                    style={{
-                      padding: '6px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                    }}
-                  >
-                    <option value="">+ Add Provider</option>
-                    {providers.map((p) => (
-                      <option
-                        key={p.id}
-                        value={p.id}
-                        disabled={user.providers.includes(p.id)}
+                  {user.role === 'Admin' ? (
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>All</span>
+                  ) : (
+                    <>
+                      <div style={{ marginBottom: '8px' }}>
+                        {user.providers.map((pId) => {
+                          const provider = providers.find((p) => p.id === pId)
+                          return (
+                            <div
+                              key={pId}
+                              style={{
+                                display: 'inline-block',
+                                marginRight: '8px',
+                                marginBottom: '8px',
+                                padding: '6px 12px',
+                                backgroundColor: '#e0f0ff',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                              }}
+                            >
+                              {provider?.name} ({provider?.provider_group})
+                              <button
+                                onClick={() => handleRemoveProvider(user.id, pId)}
+                                style={{
+                                  marginLeft: '8px',
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#f44',
+                                  cursor: 'pointer',
+                                  fontSize: '14px',
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <select
+                        onChange={(e) => {
+                          const pId = parseInt(e.target.value)
+                          if (pId) {
+                            handleAssignProvider(user.id, pId)
+                            e.target.value = ''
+                          }
+                        }}
+                        style={{
+                          padding: '6px',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                        }}
                       >
-                        {p.name} ({p.provider_group})
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <Link href="/projects/mra-vbc-opps" style={{ color: '#0070f3', textDecoration: 'none' }}>
-                    View Work Queue
-                  </Link>
+                        <option value="">+ Add Provider</option>
+                        {providers.map((p) => (
+                          <option
+                            key={p.id}
+                            value={p.id}
+                            disabled={user.providers.includes(p.id)}
+                          >
+                            {p.name} ({p.provider_group})
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

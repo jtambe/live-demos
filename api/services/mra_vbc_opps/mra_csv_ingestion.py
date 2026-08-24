@@ -1,6 +1,7 @@
 import csv
 import io
 import logging
+import re
 from typing import Dict, List, Tuple
 from db import supabase
 from .constants import CSV_REQUIRED_COLUMNS, CSV_MAX_RECORDS
@@ -52,6 +53,11 @@ class MraCSVIngestionService:
                 return False, f"Row {row_num}: Missing {field}"
         return True, ""
 
+    def extract_year_month(self, source_file: str) -> str:
+        """Extract YYYYMM from source_file (e.g., 'MRA_202501.csv' -> '202501')"""
+        match = re.search(r'(\d{6})', source_file)
+        return match.group(1) if match else None
+
     def ingest(self, file_content: bytes) -> Dict:
         """Main ingestion flow - parse CSV and call stored procedure"""
         rows = self.parse_csv(file_content)
@@ -102,6 +108,7 @@ class MraCSVIngestionService:
             provider_key = (str(row['provider_name']).strip(), str(row['provider_group']).strip())
             providers.add(provider_key)
 
+            source_file_str = str(row['source_file']).strip()
             opportunities.append({
                 'member_id': member_id,
                 'policy_number': str(row['policy_number']).strip(),
@@ -115,7 +122,8 @@ class MraCSVIngestionService:
                 'initiative': str(row['initiative']).strip(),
                 'evidence': row.get('evidence', '').strip() or None,
                 'last_dos': row.get('last_dos', '').strip() or None,
-                'source_file': str(row['source_file']).strip()
+                'source_file': source_file_str,
+                'source_year_month': self.extract_year_month(source_file_str)
             })
 
         # Call stored procedure
@@ -144,7 +152,7 @@ class MraCSVIngestionService:
                     'success': response.get('success', False),
                     'upload_id': response.get('upload_id'),
                     'errors': response.get('errors', []),
-                    'counts': response.get('counts', {'inserted': 0, 'updated': 0, 'skipped': 0, 'non_hcc': 0})
+                    'counts': response.get('counts', {'inserted': 0, 'updated': 0, 'duplicates': 0, 'skipped': 0, 'non_hcc': 0})
                 }
             else:
                 self.errors.append("Stored procedure returned no data")
@@ -152,7 +160,7 @@ class MraCSVIngestionService:
                     'success': False,
                     'upload_id': None,
                     'errors': self.errors,
-                    'counts': {'inserted': 0, 'updated': 0, 'skipped': 0, 'non_hcc': 0}
+                    'counts': {'inserted': 0, 'updated': 0, 'duplicates': 0, 'skipped': 0, 'non_hcc': 0}
                 }
         except Exception as e:
             self.errors.append(f"Bulk ingestion failed: {str(e)}")

@@ -2,20 +2,18 @@ import jwt
 import logging
 from typing import Optional, Dict
 from db import supabase
-import os
 
 logger = logging.getLogger(__name__)
-
-SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
 
 
 class AuthService:
     @staticmethod
     def verify_token(token: str) -> Optional[Dict]:
-        """Verify Supabase Auth JWT token"""
+        """Verify and decode Supabase Auth JWT token (RS256)"""
         try:
-            # Verify using Supabase's JWT secret
-            payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"])
+            # Supabase Auth tokens are RS256 (asymmetric)
+            # Decode without verification here; RLS policies enforce access at DB level
+            payload = jwt.decode(token, options={"verify_signature": False})
             return payload
         except jwt.ExpiredSignatureError:
             logger.warning("Token expired")

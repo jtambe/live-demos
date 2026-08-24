@@ -1,14 +1,7 @@
 -- MRA VBC Opportunities: Demo Seed Data
 -- NOTE: With Supabase Auth, Supabase Auth users must be created separately.
 -- This migration creates user records in mra_vbc_opps.users for role/provider management.
--- Use backend setup script to create Supabase Auth users with "Saludhealth" password.
 
--- Seed providers
-INSERT INTO mra_vbc_opps.providers (name, provider_group) VALUES
-('Palm Medical Group', 'Independent Practice'),
-('Sunshine Health Center', 'Independent Practice'),
-('Coastal Primary Care', 'Corporate Network')
-ON CONFLICT (name, provider_group) DO NOTHING;
 
 -- Seed demo users (provider assignments handled via admin UI)
 INSERT INTO mra_vbc_opps.users (email, password_hash, role) VALUES

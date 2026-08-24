@@ -12,6 +12,7 @@ interface UploadResult {
   counts: {
     inserted: number
     updated: number
+    duplicates: number
     skipped: number
     non_hcc: number
   }
@@ -95,12 +96,6 @@ export default function MraUploadPage() {
 
   return (
     <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <Link href="/projects/mra-vbc-opps" style={{ color: '#0070f3', textDecoration: 'none' }}>
-          ← Back to MRA VBC Opps
-        </Link>
-      </div>
-
       <h1>Upload MRA CSV</h1>
       <p style={{ color: '#666' }}>Upload a CSV file to ingest coding opportunities into the platform.</p>
 
@@ -194,6 +189,13 @@ export default function MraUploadPage() {
                 {result.counts.updated}
               </div>
               <div style={{ color: '#666', marginTop: '4px' }}>Updated (Year-over-Year)</div>
+            </div>
+
+            <div style={{ padding: '16px', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4caf50' }}>
+                {result.counts.duplicates}
+              </div>
+              <div style={{ color: '#666', marginTop: '4px' }}>Duplicates (Skipped)</div>
             </div>
 
             <div style={{ padding: '16px', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>

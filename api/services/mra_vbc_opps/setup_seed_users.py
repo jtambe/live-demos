@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
 Setup script to create seed users in Supabase Auth.
-Run this after migrations to populate demo users.
-Usage: python api/setup_seed_users.py
+Run from project root: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... python api/services/mra_vbc_opps/setup_seed_users.py
 """
 
+import sys
 import os
+
+# Add api/ to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
+
 from db import supabase
 
 SEED_USERS = [

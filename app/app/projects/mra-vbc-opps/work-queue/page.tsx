@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { getApiUrl } from '@/utils/api'
 
 interface Opportunity {
@@ -11,6 +10,7 @@ interface Opportunity {
   provider_id: number
   provider_name: string
   payer_id: number
+  payer_name: string
   icd_10: string
   icd_10_description: string
   hcc_code: string
@@ -34,37 +34,106 @@ interface Provider {
 
 export default function WorkQueuePage() {
   const router = useRouter()
-  const [memberGroups, setMemberGroups] = useState<Record<number, MemberGroup>>({})
+  const [memberGroups, setMemberGroups] = useState<Record<string, MemberGroup>>({})
   const [providers, setProviders] = useState<Provider[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [expandedMembers, setExpandedMembers] = useState<Set<number>>(new Set())
+  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set())
 
   // Filters
-  const [searchMemberName, setSearchMemberName] = useState('')
   const [selectedProvider, setSelectedProvider] = useState<number | null>(null)
-  const [selectedInitiative, setSelectedInitiative] = useState<string>('')
   const [selectedStatus, setSelectedStatus] = useState<string>('')
   const [limit, setLimit] = useState(50)
   const [offset, setOffset] = useState(0)
-  const [totalCount, setTotalCount] = useState(0)
+  const [membersWithVbcCount, setMembersWithVbcCount] = useState(0)
+  const [totalOpportunitiesCount, setTotalOpportunitiesCount] = useState(0)
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  // Bulk selection and modal
+  const [selectedOpportunities, setSelectedOpportunities] = useState<Set<number>>(new Set())
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkStatus, setBulkStatus] = useState('')
+  const [bulkNote, setBulkNote] = useState('')
+  const [bulkUpdating, setBulkUpdating] = useState(false)
+
+  const getAuthToken = () => typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
   useEffect(() => {
+    const token = getAuthToken()
     if (!token) {
       router.push('/projects/mra-vbc-opps/auth/login')
       return
     }
     loadProviders()
-  }, [token, router])
+  }, [router])
 
   useEffect(() => {
-    loadWorkQueue()
-  }, [selectedProvider, selectedInitiative, selectedStatus, limit, offset, token])
+    const token = getAuthToken()
+    if (token) {
+      loadWorkQueue()
+    }
+  }, [selectedProvider, selectedStatus, limit, offset])
+
+  const toggleOpportunitySelection = (oppId: number) => {
+    const newSelected = new Set(selectedOpportunities)
+    if (newSelected.has(oppId)) {
+      newSelected.delete(oppId)
+    } else {
+      newSelected.add(oppId)
+    }
+    setSelectedOpportunities(newSelected)
+  }
+
+  const handleBulkUpdate = async () => {
+    if (!bulkStatus || selectedOpportunities.size === 0) return
+
+    try {
+      setBulkUpdating(true)
+      const token = getAuthToken()
+
+      if (!token) {
+        setError('Failed to authenticate')
+        return
+      }
+
+      const response = await fetch(`${getApiUrl()}/mra-vbc-opps/opportunities/bulk/disposition`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          opportunity_ids: Array.from(selectedOpportunities),
+          disposition_status: bulkStatus,
+          justification_note: bulkNote || null,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.detail || 'Failed to update dispositions')
+        return
+      }
+
+      // Reset modal and selections
+      setShowBulkModal(false)
+      setSelectedOpportunities(new Set())
+      setBulkStatus('')
+      setBulkNote('')
+
+      // Refresh data
+      await loadWorkQueue()
+    } catch (err) {
+      setError('Failed to update dispositions')
+      console.error(err)
+    } finally {
+      setBulkUpdating(false)
+    }
+  }
 
   const loadProviders = async () => {
     try {
+      const token = getAuthToken()
       const res = await fetch(`${getApiUrl()}/mra-vbc-opps/auth/providers`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -78,15 +147,14 @@ export default function WorkQueuePage() {
   }
 
   const loadWorkQueue = async () => {
+    const token = getAuthToken()
     if (!token) return
     setLoading(true)
     setError(null)
 
     try {
       const params = new URLSearchParams()
-      if (searchMemberName) params.append('search_member_name', searchMemberName)
       if (selectedProvider) params.append('provider_id', selectedProvider.toString())
-      if (selectedInitiative) params.append('initiative', selectedInitiative)
       if (selectedStatus) params.append('disposition_status', selectedStatus)
       params.append('limit', limit.toString())
       params.append('offset', offset.toString())
@@ -102,7 +170,8 @@ export default function WorkQueuePage() {
 
       const data = await res.json()
       setMemberGroups(data.members || {})
-      setTotalCount(data.total || 0)
+      setMembersWithVbcCount(data.members_with_vbc_count || 0)
+      setTotalOpportunitiesCount(data.total_opportunities_count || 0)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load work queue')
     } finally {
@@ -110,7 +179,7 @@ export default function WorkQueuePage() {
     }
   }
 
-  const toggleMemberExpand = (memberId: number) => {
+  const toggleMemberExpand = (memberId: string) => {
     const newExpanded = new Set(expandedMembers)
     if (newExpanded.has(memberId)) {
       newExpanded.delete(memberId)
@@ -122,26 +191,18 @@ export default function WorkQueuePage() {
 
   const handleClearFilters = () => {
     setSelectedProvider(null)
-    setSelectedInitiative('')
     setSelectedStatus('')
-    setSearchMemberName('')
     setOffset(0)
   }
 
   const currentPage = Math.floor(offset / limit) + 1
-  const totalPages = Math.ceil(totalCount / limit)
-  const memberIds = Object.keys(memberGroups).map(Number)
+  const totalPages = Math.ceil(membersWithVbcCount / limit)
+  const memberIds = Object.keys(memberGroups)
   const memberCount = memberIds.length
-  const opportunityCount = memberIds.reduce((sum, mid) => sum + (memberGroups[mid]?.opportunities.length || 0), 0)
 
   return (
     <div style={{ padding: '40px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '40px' }}>
-        <Link href="/projects/mra-vbc-opps" style={{ color: '#0070f3', textDecoration: 'none' }}>
-          ← Back to MRA VBC Opps
-        </Link>
-        <h1 style={{ margin: '20px 0 0 0' }}>Work Queue</h1>
-      </div>
+      <h1 style={{ marginBottom: '40px' }}>Work Queue</h1>
 
       {error && (
         <div
@@ -155,6 +216,121 @@ export default function WorkQueuePage() {
           }}
         >
           {error}
+        </div>
+      )}
+
+      {/* Bulk Update Modal */}
+      {showBulkModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '32px',
+              maxWidth: '500px',
+              width: '90%',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <h2 style={{ marginTop: 0, marginBottom: '20px' }}>
+              Update {selectedOpportunities.size} Opportunit{selectedOpportunities.size === 1 ? 'y' : 'ies'}
+            </h2>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
+                Status
+              </label>
+              <select
+                value={bulkStatus}
+                onChange={(e) => setBulkStatus(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <option value="">Select a status</option>
+                <option value="Open">Open</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Denied">Denied</option>
+                <option value="Pending Chart">Pending Chart</option>
+                <option value="Referred to Provider">Referred to Provider</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
+                Note (Optional)
+              </label>
+              <textarea
+                value={bulkNote}
+                onChange={(e) => setBulkNote(e.target.value)}
+                placeholder="Add a note for this disposition..."
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  boxSizing: 'border-box',
+                  minHeight: '100px',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowBulkModal(false)}
+                disabled={bulkUpdating}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#f0f0f0',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkUpdate}
+                disabled={!bulkStatus || bulkUpdating}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: bulkStatus ? '#1976d2' : '#ccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: bulkStatus ? 'pointer' : 'not-allowed',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                }}
+                onMouseEnter={(e) => bulkStatus && (e.currentTarget.style.backgroundColor = '#1565c0')}
+                onMouseLeave={(e) => bulkStatus && (e.currentTarget.style.backgroundColor = '#1976d2')}
+              >
+                {bulkUpdating ? 'Applying...' : 'Apply to All'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -188,33 +364,6 @@ export default function WorkQueuePage() {
                   {p.name}
                 </option>
               ))}
-            </select>
-          </div>
-
-          {/* Initiative */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
-              Initiative
-            </label>
-            <select
-              value={selectedInitiative}
-              onChange={(e) => {
-                setSelectedInitiative(e.target.value)
-                setOffset(0)
-              }}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                boxSizing: 'border-box',
-              }}
-            >
-              <option value="">All Initiatives</option>
-              <option value="HCC Recapture">HCC Recapture</option>
-              <option value="HCC Gap">HCC Gap</option>
-              <option value="Screenings">Screenings</option>
-              <option value="Audit">Audit</option>
             </select>
           </div>
 
@@ -266,7 +415,7 @@ export default function WorkQueuePage() {
       {/* Results */}
       <div>
         <div style={{ marginBottom: '20px', color: '#666', fontSize: '14px' }}>
-          {memberCount} members · {opportunityCount} opportunities
+          {membersWithVbcCount} members with VBC opportunities · {totalOpportunitiesCount} total opportunities
         </div>
 
         {loading ? (
@@ -278,23 +427,20 @@ export default function WorkQueuePage() {
             {memberIds.map((memberId) => {
               const group = memberGroups[memberId]
               const isExpanded = expandedMembers.has(memberId)
+              const memberSelectedCount = group.opportunities.filter((opp) => selectedOpportunities.has(opp.id)).length
 
               return (
                 <div key={memberId} style={{ borderBottom: '1px solid #ddd' }}>
                   {/* Member Header */}
                   <div
-                    onClick={() => toggleMemberExpand(memberId)}
                     style={{
                       padding: '16px 20px',
                       backgroundColor: '#f5f5f5',
-                      cursor: 'pointer',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       userSelect: 'none',
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#efefef')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f5f5f5')}
                   >
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '4px' }}>
@@ -304,8 +450,61 @@ export default function WorkQueuePage() {
                         ID: {group.member_id} · {group.opportunities.length} opportunity(ies)
                       </div>
                     </div>
-                    <div style={{ fontSize: '18px', color: '#666' }}>
-                      {isExpanded ? '▼' : '▶'}
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      {memberSelectedCount > 0 && (
+                        <>
+                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#1976d2' }}>
+                            {memberSelectedCount} selected
+                          </span>
+                          <button
+                            onClick={() => setShowBulkModal(true)}
+                            style={{
+                              padding: '8px 14px',
+                              backgroundColor: '#4caf50',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: 'bold',
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#45a049')}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#4caf50')}
+                          >
+                            Update ({memberSelectedCount})
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => router.push(`/projects/mra-vbc-opps/opportunities/member/${encodeURIComponent(group.member_id)}`)}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#1976d2',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1565c0')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1976d2')}
+                      >
+                        Review
+                      </button>
+                      <button
+                        onClick={() => toggleMemberExpand(memberId)}
+                        style={{
+                          padding: '8px 12px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '18px',
+                          color: '#666',
+                        }}
+                      >
+                        {isExpanded ? '▼' : '▶'}
+                      </button>
                     </div>
                   </div>
 
@@ -320,9 +519,31 @@ export default function WorkQueuePage() {
                           }}
                         >
                           <thead>
-                            <tr style={{ backgroundColor: '#fafafa' }}>
+                            <tr style={{ backgroundColor: 'antiquewhite' }}>
+                              <th style={{ padding: '12px 12px', textAlign: 'center', borderBottom: '1px solid #ddd', fontSize: '12px', fontWeight: '600', width: '40px' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={group.opportunities.every((opp) => selectedOpportunities.has(opp.id))}
+                                  onChange={() => {
+                                    const newSelected = new Set(selectedOpportunities)
+                                    const allSelected = group.opportunities.every((opp) => selectedOpportunities.has(opp.id))
+                                    group.opportunities.forEach((opp) => {
+                                      if (allSelected) {
+                                        newSelected.delete(opp.id)
+                                      } else {
+                                        newSelected.add(opp.id)
+                                      }
+                                    })
+                                    setSelectedOpportunities(newSelected)
+                                  }}
+                                  style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                                />
+                              </th>
                               <th style={{ padding: '12px 20px', textAlign: 'left', borderBottom: '1px solid #ddd', fontSize: '12px', fontWeight: '600' }}>
                                 Provider
+                              </th>
+                              <th style={{ padding: '12px 20px', textAlign: 'left', borderBottom: '1px solid #ddd', fontSize: '12px', fontWeight: '600' }}>
+                                Payer
                               </th>
                               <th style={{ padding: '12px 20px', textAlign: 'left', borderBottom: '1px solid #ddd', fontSize: '12px', fontWeight: '600' }}>
                                 ICD-10
@@ -339,15 +560,21 @@ export default function WorkQueuePage() {
                               <th style={{ padding: '12px 20px', textAlign: 'left', borderBottom: '1px solid #ddd', fontSize: '12px', fontWeight: '600' }}>
                                 Evidence
                               </th>
-                              <th style={{ padding: '12px 20px', textAlign: 'left', borderBottom: '1px solid #ddd', fontSize: '12px', fontWeight: '600' }}>
-                                Action
-                              </th>
                             </tr>
                           </thead>
                           <tbody>
                             {group.opportunities.map((opp) => (
-                              <tr key={opp.id} style={{ borderBottom: '1px solid #eee' }}>
+                              <tr key={opp.id} style={{ borderBottom: '1px solid #eee', backgroundColor: selectedOpportunities.has(opp.id) ? '#e3f2fd' : '#f9f9f9' }}>
+                                <td style={{ padding: '12px 12px', textAlign: 'center', fontSize: '13px' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedOpportunities.has(opp.id)}
+                                    onChange={() => toggleOpportunitySelection(opp.id)}
+                                    style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                                  />
+                                </td>
                                 <td style={{ padding: '12px 20px', fontSize: '13px' }}>{opp.provider_name}</td>
+                                <td style={{ padding: '12px 20px', fontSize: '13px' }}>{opp.payer_name}</td>
                                 <td style={{ padding: '12px 20px', fontSize: '13px' }}>
                                   {opp.icd_10}
                                   <div style={{ fontSize: '11px', color: '#666' }}>{opp.icd_10_description}</div>
@@ -380,16 +607,8 @@ export default function WorkQueuePage() {
                                     {opp.disposition_status}
                                   </span>
                                 </td>
-                                <td style={{ padding: '12px 20px', fontSize: '13px', maxWidth: '200px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                                  {opp.evidence || '—'}
-                                </td>
-                                <td style={{ padding: '12px 20px', fontSize: '13px' }}>
-                                  <Link
-                                    href={`/projects/mra-vbc-opps/opportunities/${opp.id}`}
-                                    style={{ color: '#0070f3', textDecoration: 'none' }}
-                                  >
-                                    Review
-                                  </Link>
+                                <td style={{ padding: '12px 20px', fontSize: '13px', maxWidth: '400px', wordWrap: 'break-word', whiteSpace: 'normal' }}>
+                                  <div style={{ fontSize: '12px', color: '#333', lineHeight: '1.4' }}>{opp.evidence || '—'}</div>
                                 </td>
                               </tr>
                             ))}
@@ -405,13 +624,9 @@ export default function WorkQueuePage() {
         )}
 
         {/* Pagination */}
-        {totalCount > 0 && (
+        {totalOpportunitiesCount > 0 && (
           <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '8px', border: '1px solid #ddd' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ fontSize: '14px', color: '#666' }}>
-                Showing row <strong>{offset + 1}</strong> to <strong>{Math.min(offset + limit, totalCount)}</strong> of <strong>{totalCount}</strong> opportunities
-              </div>
-
+            <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <label style={{ fontSize: '14px', color: '#666' }}>
                   Per page:

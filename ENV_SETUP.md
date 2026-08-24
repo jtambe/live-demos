@@ -8,7 +8,6 @@ Create a `.env.local` file in the project root with:
 # Supabase Configuration
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...  # anon/public key
-SUPABASE_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters  # JWT secret for verification
 
 # Database
 DATABASE_URL=postgresql://postgres:[password]@[project].supabase.co:5432/postgres
@@ -18,8 +17,7 @@ DATABASE_URL=postgresql://postgres:[password]@[project].supabase.co:5432/postgre
 
 1. **SUPABASE_URL**: Project Settings → API → Project URL
 2. **SUPABASE_KEY**: Project Settings → API → Project API Keys → `anon` key
-3. **SUPABASE_JWT_SECRET**: Project Settings → API → JWT Settings → Secret (the actual secret, not the token)
-4. **DATABASE_URL**: Project Settings → Database → Connection Pooling (Supabase)
+3. **DATABASE_URL**: Project Settings → Database → Connection Pooling (Supabase)
 
 ## Setup Steps
 
@@ -36,11 +34,11 @@ DATABASE_URL=postgresql://postgres:[password]@[project].supabase.co:5432/postgre
 
 3. **Verify setup**:
    - Login at `/projects/mra-vbc-opps/auth/login`
-   - Test credentials: `admin1@vbc.com` / `Saludhealth`
+   - Test credentials: `admin1@vbc.com` / 
 
 ## Notes
 
-- JWT verification uses HS256 with `SUPABASE_JWT_SECRET`
+- Authentication handled by Supabase Auth (RS256 JWT tokens)
 - Supabase Auth tokens are valid for 1 hour by default
 - RLS policies enforce row-level access based on `auth.jwt()` email
 - Never commit `.env.local` - use `.env.local.example` for template

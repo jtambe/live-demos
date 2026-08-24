@@ -150,7 +150,7 @@ export default function LoginPage() {
 
         <div style={{ marginTop: '40px', padding: '16px', backgroundColor: '#f9f9f9', borderRadius: '4px', fontSize: '13px', color: '#666' }}>
           <p style={{ marginTop: '0' }}>Demo Credentials (click to fill):</p>
-          <p style={{ marginBottom: '8px', cursor: 'pointer' }} onClick={() => { setEmail('admin1@vbc.com'); }}>
+          <p style={{ marginBottom: '8px', cursor: 'pointer' }} onClick={() => { setEmail('admin1@vbc.com');}}>
             <strong style={{ color: '#0070f3' }}>Admin:</strong> admin1@vbc.com
           </p>
           <p style={{ marginBottom: '0', cursor: 'pointer' }} onClick={() => { setEmail('user1@vbc.com');}}>

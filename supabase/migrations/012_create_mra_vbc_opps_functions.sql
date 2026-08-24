@@ -1,13 +1,35 @@
 -- MRA VBC Opportunities: RPC Functions
 
--- Get providers for UI dropdowns
-CREATE OR REPLACE FUNCTION mra_vbc_opps.get_providers_list()
+-- Drop old version of get_work_queue_data (different signature)
+DROP FUNCTION IF EXISTS mra_vbc_opps.get_work_queue_data(VARCHAR, INT, INT, INT, VARCHAR, VARCHAR, INT, INT) CASCADE;
+
+-- Drop old version of get_providers_list (no parameters)
+DROP FUNCTION IF EXISTS mra_vbc_opps.get_providers_list() CASCADE;
+
+-- Get providers for UI dropdowns (filtered by user role)
+CREATE OR REPLACE FUNCTION mra_vbc_opps.get_providers_list(p_user_email VARCHAR)
 RETURNS TABLE (id INT, name VARCHAR, provider_group VARCHAR) AS $$
-  SELECT id, name, provider_group FROM mra_vbc_opps.providers ORDER BY name;
+  WITH user_info AS (
+    SELECT id, role FROM mra_vbc_opps.users WHERE email = p_user_email
+  )
+  SELECT p.id, p.name, p.provider_group
+  FROM mra_vbc_opps.providers p
+  WHERE 
+    -- Admin sees all providers
+    (SELECT role FROM user_info) = 'Admin'
+    OR
+    -- Coder sees only assigned providers
+    p.id IN (
+      SELECT pum.provider_id 
+      FROM mra_vbc_opps.provider_user_mappings pum
+      WHERE pum.user_id = (SELECT id FROM user_info)
+    )
+  ORDER BY p.name;
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION mra_vbc_opps.get_providers_list TO authenticated;
 
 -- Get provider IDs assigned to a user
+-- TO DO: if this is being used for getting provider ids for displaying filter, this might need  name - group as english text
 CREATE OR REPLACE FUNCTION mra_vbc_opps.get_user_provider_ids(p_user_id INT)
 RETURNS TABLE (provider_id INT) AS $$
   SELECT provider_id FROM mra_vbc_opps.provider_user_mappings WHERE user_id = p_user_id;
@@ -36,8 +58,9 @@ RETURNS TABLE (
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION mra_vbc_opps.list_users_admin TO authenticated;
 
--- Get work queue data (member-grouped opportunities)
+-- Get work queue data (member-grouped opportunities, paginated by member)
 CREATE OR REPLACE FUNCTION mra_vbc_opps.get_work_queue_data(
+  p_user_email VARCHAR,
   p_member_id INT DEFAULT NULL,
   p_provider_id INT DEFAULT NULL,
   p_payer_id INT DEFAULT NULL,
@@ -47,14 +70,17 @@ CREATE OR REPLACE FUNCTION mra_vbc_opps.get_work_queue_data(
   p_offset INT DEFAULT 0
 )
 RETURNS TABLE (
-  member_pk INT,
   member_id VARCHAR,
   member_name VARCHAR,
   opp_count INT,
   opportunities JSONB,
-  total_count INT
+  members_with_vbc_count INT,
+  total_opportunities_count INT
 ) AS $$
-  WITH filtered_opps AS (
+  WITH user_info AS (
+    SELECT id, role FROM mra_vbc_opps.users WHERE email = p_user_email
+  ),
+  filtered_opps AS (
     SELECT
       o.id,
       o.member_id,
@@ -69,14 +95,15 @@ RETURNS TABLE (
       o.evidence,
       o.last_dos,
       p.name as provider_name,
+      py.name as payer_name,
       m.member_id as member_id_str,
-      m.name as member_name_str,
-      m.id as member_pk,
-      ROW_NUMBER() OVER (ORDER BY o.member_id) as rn,
-      COUNT(*) OVER () as total
+      pgp_sym_decrypt(m.name_encrypted, 'mra-vbc-opps-key')::VARCHAR as member_name_str,
+      m.id as member_pk
     FROM mra_vbc_opps.opportunities o
     JOIN mra_vbc_opps.members m ON o.member_id = m.id
     JOIN mra_vbc_opps.providers p ON o.provider_id = p.id
+    JOIN mra_vbc_opps.payers py ON o.payer_id = py.id
+    JOIN user_info ui ON true
     WHERE o.is_current = true
       AND o.hcc_code IS NOT NULL
       AND (p_member_id IS NULL OR o.member_id = p_member_id)
@@ -84,47 +111,56 @@ RETURNS TABLE (
       AND (p_payer_id IS NULL OR o.payer_id = p_payer_id)
       AND (p_initiative IS NULL OR o.initiative = p_initiative)
       AND (p_disposition_status IS NULL OR o.disposition_status = p_disposition_status)
+      AND (ui.role = 'Admin' OR o.provider_id IN (
+        SELECT provider_id FROM mra_vbc_opps.provider_user_mappings
+        WHERE user_id = ui.id
+      ))
   ),
-  paginated AS (
-    SELECT * FROM filtered_opps
-    WHERE rn BETWEEN (p_offset + 1) AND (p_offset + p_limit)
+  members_grouped AS (
+    SELECT DISTINCT
+      member_pk,
+      member_id_str,
+      member_name_str
+    FROM filtered_opps
+    ORDER BY member_id_str
   ),
-  grouped AS (
-    SELECT
-      fo.member_pk,
-      fo.member_id_str,
-      fo.member_name_str,
-      COUNT(*)::INT as opp_count,
-      JSONB_AGG(
-        JSONB_BUILD_OBJECT(
-          'id', fo.id,
-          'member_id', fo.member_id,
-          'provider_id', fo.provider_id,
-          'provider_name', fo.provider_name,
-          'payer_id', fo.payer_id,
-          'icd_10', fo.icd_10,
-          'icd_10_description', fo.icd_10_description,
-          'hcc_code', fo.hcc_code,
-          'hcc_description', fo.hcc_description,
-          'initiative', fo.initiative,
-          'disposition_status', fo.disposition_status,
-          'evidence', fo.evidence,
-          'last_dos', fo.last_dos
-        )
-      ) as opps_json,
-      MAX(fo.total)::INT as total
-    FROM paginated fo
-    GROUP BY fo.member_pk, fo.member_id_str, fo.member_name_str
+  totals AS (
+    SELECT 
+      COUNT(DISTINCT member_pk)::INT as members_count,
+      COUNT(*)::INT as opportunities_count
+    FROM filtered_opps
+  ),
+  paginated_members AS (
+    SELECT * FROM members_grouped
+    LIMIT p_limit OFFSET p_offset
   )
   SELECT
-    member_pk,
-    member_id_str,
-    member_name_str,
-    opp_count,
-    opps_json,
-    total
-  FROM grouped;
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+    pm.member_id_str,
+    pm.member_name_str,
+    COUNT(fo.id)::INT as opp_count,
+    COALESCE(JSONB_AGG(
+      JSONB_BUILD_OBJECT(
+        'id', fo.id,
+        'provider_name', fo.provider_name,
+        'payer_name', fo.payer_name,
+        'payer_id', fo.payer_id,
+        'icd_10', fo.icd_10,
+        'icd_10_description', fo.icd_10_description,
+        'hcc_code', fo.hcc_code,
+        'hcc_description', fo.hcc_description,
+        'initiative', fo.initiative,
+        'disposition_status', fo.disposition_status,
+        'evidence', fo.evidence,
+        'last_dos', fo.last_dos
+      )
+    ), '[]'::JSONB) as opportunities,
+    (SELECT members_count FROM totals)::INT as members_with_vbc_count,
+    (SELECT opportunities_count FROM totals)::INT as total_opportunities_count
+  FROM paginated_members pm
+  LEFT JOIN filtered_opps fo ON pm.member_pk = fo.member_pk
+  GROUP BY pm.member_pk, pm.member_id_str, pm.member_name_str
+  ORDER BY pm.member_id_str
+$$ LANGUAGE sql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION mra_vbc_opps.get_work_queue_data TO authenticated;
 
 -- Search members by name or member_id
@@ -156,6 +192,7 @@ DECLARE
   v_upload_id INT;
   v_inserted INT := 0;
   v_updated INT := 0;
+  v_duplicates INT := 0;
   v_skipped INT := 0;
   v_non_hcc INT := 0;
   v_errors TEXT[] := ARRAY[]::TEXT[];
@@ -164,6 +201,9 @@ DECLARE
   v_payer_id INT;
   v_provider_id INT;
   v_existing_opp_id INT;
+  v_old_year_month VARCHAR(6);
+  v_is_duplicate BOOLEAN;
+  v_new_is_current BOOLEAN;
 BEGIN
   INSERT INTO mra_vbc_opps.uploads (filename, uploaded_by, record_count)
   VALUES (p_upload_filename, p_uploaded_by, jsonb_array_length(p_data->'opportunities'))
@@ -207,7 +247,30 @@ BEGIN
         v_non_hcc := v_non_hcc + 1;
       END IF;
 
-      SELECT id INTO v_existing_opp_id FROM mra_vbc_opps.opportunities
+      -- Check if exact same opportunity already exists (all fields identical)
+      SELECT EXISTS (
+        SELECT 1 FROM mra_vbc_opps.opportunities
+        WHERE member_id = v_member_id
+          AND provider_id = v_provider_id
+          AND payer_id = v_payer_id
+          AND icd_10 IS NOT DISTINCT FROM v_opp_row->>'icd_10'
+          AND icd_10_description IS NOT DISTINCT FROM v_opp_row->>'icd_10_description'
+          AND hcc_code IS NOT DISTINCT FROM NULLIF(v_opp_row->>'hcc_code', '')
+          AND hcc_description IS NOT DISTINCT FROM v_opp_row->>'hcc_description'
+          AND initiative IS NOT DISTINCT FROM v_opp_row->>'initiative'
+          AND evidence IS NOT DISTINCT FROM v_opp_row->>'evidence'
+          AND last_dos IS NOT DISTINCT FROM NULLIF(v_opp_row->>'last_dos', '')::DATE
+          AND source_file IS NOT DISTINCT FROM v_opp_row->>'source_file'
+      ) INTO v_is_duplicate;
+
+      IF v_is_duplicate THEN
+        -- Exact duplicate: do nothing, just count it
+        v_duplicates := v_duplicates + 1;
+        CONTINUE;
+      END IF;
+
+      -- Check for existing opportunity with same key fields (may need updating)
+      SELECT id, source_year_month INTO v_existing_opp_id, v_old_year_month FROM mra_vbc_opps.opportunities
         WHERE member_id = v_member_id
           AND provider_id = v_provider_id
           AND payer_id = v_payer_id
@@ -216,16 +279,23 @@ BEGIN
         LIMIT 1;
 
       IF v_existing_opp_id IS NOT NULL THEN
-        UPDATE mra_vbc_opps.opportunities SET is_current = false WHERE id = v_existing_opp_id;
+        -- Different data detected: mark old as inactive, insert new
+        IF (v_opp_row->>'source_year_month')::INTEGER >= v_old_year_month::INTEGER THEN
+          UPDATE mra_vbc_opps.opportunities SET is_current = false WHERE id = v_existing_opp_id;
+          v_new_is_current := true;
+        ELSE
+          v_new_is_current := false;
+        END IF;
         v_updated := v_updated + 1;
       ELSE
+        v_new_is_current := true;
         v_inserted := v_inserted + 1;
       END IF;
 
       INSERT INTO mra_vbc_opps.opportunities (
         member_id, provider_id, payer_id, upload_id,
         icd_10, icd_10_description, hcc_code, hcc_description,
-        initiative, evidence, last_dos, source_file,
+        initiative, evidence, last_dos, source_file, source_year_month,
         disposition_status, is_current
       ) VALUES (
         v_member_id, v_provider_id, v_payer_id, v_upload_id,
@@ -233,7 +303,8 @@ BEGIN
         NULLIF(v_opp_row->>'hcc_code', ''), v_opp_row->>'hcc_description',
         v_opp_row->>'initiative', v_opp_row->>'evidence',
         NULLIF(v_opp_row->>'last_dos', '')::DATE, v_opp_row->>'source_file',
-        'Open', true
+        v_opp_row->>'source_year_month',
+        'Open', v_new_is_current
       );
 
       INSERT INTO mra_vbc_opps.member_identifiers (member_id, payer_id, policy_number)
@@ -252,11 +323,13 @@ BEGIN
     'counts', jsonb_build_object(
       'inserted', v_inserted,
       'updated', v_updated,
+      'duplicates', v_duplicates,
       'skipped', v_skipped,
       'non_hcc', v_non_hcc
     ),
     'errors', v_errors
   );
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION mra_vbc_opps.bulk_ingest_csv TO authenticated;
+
