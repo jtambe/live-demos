@@ -96,7 +96,7 @@ export default function MemberReviewPage() {
       setOpportunities(data.opportunities);
       // Auto-expand all opportunities
       if (data.opportunities.length > 0) {
-        setExpandedAccordions(new Set(data.opportunities.map((opp) => opp.id)));
+        setExpandedAccordions(new Set(data.opportunities.map((opp: Opportunity) => opp.id)));
       }
     } catch (err) {
       setError('Failed to fetch member opportunities');
