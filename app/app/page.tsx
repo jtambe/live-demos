@@ -21,11 +21,11 @@ const projects: Project[] = [
     status: 'active',
   },
   {
-    id: 'project-2',
-    name: 'Project 2',
-    description: 'Coming soon...',
-    path: '/projects/project-2',
-    status: 'soon',
+    id: 'mra-vbc-opps',
+    name: 'MRA VBC Opportunities',
+    description: 'Member-centric work queue for VBC coding opportunities with disposition tracking',
+    path: '/projects/mra-vbc-opps',
+    status: 'active',
   },
   {
     id: 'project-3',
