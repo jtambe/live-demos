@@ -26,7 +26,7 @@ RETURNS TABLE (id INT, name VARCHAR, provider_group VARCHAR) AS $$
     )
   ORDER BY p.name;
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
-GRANT EXECUTE ON FUNCTION mra_vbc_opps.get_providers_list TO authenticated;
+GRANT EXECUTE ON FUNCTION mra_vbc_opps.get_providers_list TO authenticated, authenticator, service_role;
 
 -- Get provider IDs assigned to a user
 -- TO DO: if this is being used for getting provider ids for displaying filter, this might need  name - group as english text
@@ -34,7 +34,7 @@ CREATE OR REPLACE FUNCTION mra_vbc_opps.get_user_provider_ids(p_user_id INT)
 RETURNS TABLE (provider_id INT) AS $$
   SELECT provider_id FROM mra_vbc_opps.provider_user_mappings WHERE user_id = p_user_id;
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
-GRANT EXECUTE ON FUNCTION mra_vbc_opps.get_user_provider_ids TO authenticated;
+GRANT EXECUTE ON FUNCTION mra_vbc_opps.get_user_provider_ids TO authenticated, authenticator, service_role;
 
 -- List all users with assigned providers (Admin)
 CREATE OR REPLACE FUNCTION mra_vbc_opps.list_users_admin()
@@ -161,7 +161,7 @@ RETURNS TABLE (
   GROUP BY pm.member_pk, pm.member_id_str, pm.member_name_str
   ORDER BY pm.member_id_str
 $$ LANGUAGE sql SECURITY DEFINER;
-GRANT EXECUTE ON FUNCTION mra_vbc_opps.get_work_queue_data TO authenticated;
+GRANT EXECUTE ON FUNCTION mra_vbc_opps.get_work_queue_data TO authenticated, authenticator, service_role;
 
 -- Search members by name or member_id
 CREATE OR REPLACE FUNCTION mra_vbc_opps.search_members(search_query TEXT)

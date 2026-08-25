@@ -61,13 +61,14 @@ WITH CHECK (
   (SELECT role FROM mra_vbc_opps.users WHERE email = mra_vbc_opps.current_user_email()) IN ('Coder', 'Admin')
 );
 
--- Grant permissions: authenticated only (RLS enforces row-level access)
-GRANT USAGE ON SCHEMA mra_vbc_opps TO authenticated, service_role;
-GRANT SELECT ON ALL TABLES IN SCHEMA mra_vbc_opps TO authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT SELECT ON TABLES TO authenticated, service_role;
-GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA mra_vbc_opps TO authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT INSERT, UPDATE, DELETE ON TABLES TO authenticated, service_role;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA mra_vbc_opps TO authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT USAGE, SELECT ON SEQUENCES TO authenticated, service_role;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA mra_vbc_opps TO authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT EXECUTE ON FUNCTIONS TO authenticated, service_role;
+-- Grant permissions: authenticated, authenticator (PostgREST), and service_role
+-- authenticator is the PostgREST connection role that needs schema access
+GRANT USAGE ON SCHEMA mra_vbc_opps TO authenticated, authenticator, service_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA mra_vbc_opps TO authenticated, authenticator, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT SELECT ON TABLES TO authenticated, authenticator, service_role;
+GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA mra_vbc_opps TO authenticated, authenticator, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT INSERT, UPDATE, DELETE ON TABLES TO authenticated, authenticator, service_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA mra_vbc_opps TO authenticated, authenticator, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT USAGE, SELECT ON SEQUENCES TO authenticated, authenticator, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA mra_vbc_opps TO authenticated, authenticator, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA mra_vbc_opps GRANT EXECUTE ON FUNCTIONS TO authenticated, authenticator, service_role;
