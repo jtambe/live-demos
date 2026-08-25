@@ -324,6 +324,7 @@ async def get_member_opportunities(member_id: str, payload = Depends(verify_toke
 
 class UpdateDispositionRequest(BaseModel):
     disposition_status: Optional[str] = None
+    justification_note: Optional[str] = None
 
 class BulkUpdateDispositionRequest(BaseModel):
     opportunity_ids: list[int]
